@@ -157,7 +157,7 @@ namespace CodeInterpreter {
             }
           case OpCode.Jge: {
               if (A < 0) continue;
-              state.Jump(EvaluateArg(instr.Arg) - 1);
+              state.Jump(EvaluateArg(instr.Arg));
               break;
             }
           case OpCode.Hlt: {
