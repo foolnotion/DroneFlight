@@ -1,12 +1,11 @@
-LDA [1000]
-SUBA 7
-JGE 6
-LDA 3
-STA [0]
-JGE 8
-LDA 2
-STA [0]
-LDA [1000]
-ADDA 1
-STA [1000]
+﻿LDA [1000] // A = Mem[1000]
+ADDA 1     // A = A+1
+STA [1000] // Mem[1000] = A
+SUBA 8     // A = A-7
+JGE 8      // IF A >= 0 GOTO LDA 2 (line 7)
+LDA 3      // A=3
+STA [0]    // Mem[0] = A
+HLT
+LDA 2      // A=2
+STA [0]    // Mem[0] = A
 HLT
