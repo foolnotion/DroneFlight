@@ -11,7 +11,7 @@ namespace DroneFlightPath
     {
         static void Main(string[] args)
         {
-            var interpreter = new Interpreter();
+            var interpreter = new Interpreter(@"G:\work\TechOn2015\DroneFlightPath\DroneFlightPath\TestFile\01_letsGetToKnowEachOther_s3.txt",100);
 
             interpreter.Read();
         }
