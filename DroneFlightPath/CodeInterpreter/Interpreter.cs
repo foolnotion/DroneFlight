@@ -100,10 +100,26 @@ namespace CodeInterpreter
                 }
                 while (!critical && lines[lineIndex] != "HLT");
 
-                moves.Add(memory[0].ToString());
+                moves.Add(ReadMove(memory[0]));
 
             }
             return moves;
+        }
+
+        private string ReadMove(int rawValue)
+        {
+            switch (rawValue)
+            {
+                case 0: return "H";
+                case 1: return "U";
+                case 2: return "R";
+                case 3: return "D";
+                case 4: return "L";
+                default:
+                    {
+                        throw new ArgumentException("Invalid direction provided " + rawValue);
+                    }
+            }
         }
 
         private int ReadArgument(Dictionary<int, int> memory, int a, int n, string rawArgument)
