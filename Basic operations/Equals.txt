@@ -1,0 +1,24 @@
+LDA [1000] //primul numar
+SUBA [1001] //al doilea numar
+JGE 6 // primul test e ok
+LDA -1 // -1 pt fail si 0 pt succes ?!
+STA [1002] // aici tinem rez
+JGE [N] //[N] o sa tina locatia unde trebuie sa ne intoarcem
+LDA [1001] // al doilea test
+SUBA [1000]
+JGE 12
+LDA -1
+STA [1002]
+JGE [N] 
+LDA 0 // nr sunt egale
+STA [1002]
+JGE [N]
+LDA 45 //exemplu de rulare
+STA [1000]
+LDA 46
+STA [1001]
+LDN 22 (linia pe care vrem sa ajungem trebuie s-o stim din generator)
+LDA 1
+JGE 0
+LDA [1002] // utilizarea raspunsului
+JGE [Unde vrem noi daca e true]
