@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 
 namespace CodeInterpreter {
-  public static class StackMachineUtil {
-    private static Dictionary<string, OpCode> instructionOpCodes = new Dictionary<string, OpCode> {
+  public static class RegisterMachineUtil {
+    private static readonly Dictionary<string, OpCode> InstructionOpCodes = new Dictionary<string, OpCode> {
       { "STA", OpCode.Sta},
       { "LDA", OpCode.Lda},
       { "LDN", OpCode.Ldn},
@@ -21,7 +21,7 @@ namespace CodeInterpreter {
       foreach (var line in lines) {
         var tokens = line.Split();
         var instrToken = tokens[0];
-        var opCode = instructionOpCodes[instrToken];
+        var opCode = InstructionOpCodes[instrToken];
         if (opCode != OpCode.Hlt && tokens.Length < 2)
           continue; // garbage. maybe throw exception
         var arg = opCode == OpCode.Hlt ? new Arg(ArgType.Value, 0) : ParseArg(tokens[1]);

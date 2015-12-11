@@ -55,12 +55,12 @@ namespace DroneFlightPath {
 
               switch (ct) {
                 case ControllerType.Target: {
-                    var t = o["target"];
+                    var t = controller["target"];
                     obj = new Drone(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point((int)t["x"], (int)t["y"]), Direction.Hold);
                     break;
                   }
                 case ControllerType.Direction: {
-                    var d = (string)o["direction"];
+                    var d = (string)controller["direction"];
                     obj = new Drone(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point(0, 0), Directions[d]);
                     break;
                   }

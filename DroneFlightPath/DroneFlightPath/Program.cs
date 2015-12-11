@@ -7,7 +7,7 @@ namespace DroneFlightPath {
   class Program {
     static void Main(string[] args) {
       var srcPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\TestFile\01_letsGetToKnowEachOther_s3.txt"));
-      var code = StackMachineUtil.LoadSource(srcPath).ToArray();
+      var code = RegisterMachineUtil.LoadSource(srcPath).ToArray();
       var sm = new RegisterMachine(1001);
 
       const int steps = 12;
