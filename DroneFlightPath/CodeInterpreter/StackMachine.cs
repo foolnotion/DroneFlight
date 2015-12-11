@@ -110,6 +110,8 @@ namespace CodeInterpreter {
     public int A;
     public int N;
 
+    public int Cycles { get; private set; }
+
     public StackMachine() {
       Memory = new int[1000000];
     }
@@ -122,10 +124,13 @@ namespace CodeInterpreter {
       if (reset) {
         A = 0;
         N = 0;
+        Memory = new int[Memory.Length];
+        Cycles = 0;
       }
       var state = new StackMachineState(instructions);
       Instruction instr;
       do {
+        Cycles++;
         instr = state.NextInstruction();
         switch (instr.OpCode) {
           case OpCode.Sta: {
