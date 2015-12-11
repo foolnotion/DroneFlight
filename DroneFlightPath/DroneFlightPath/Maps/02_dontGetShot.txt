@@ -1,0 +1,19 @@
+{
+  "simulatedDrone": {"type": "Drone", "identifier": "@", "position": {"x": 0, "y": 0}},
+  "map": {
+    "rows": 10,
+    "cols": 10,
+    "target": {"x": 6, "y": 2},
+    "objects": [
+      {"type": "Obstacle", "position": {"x": 4, "y": 0}},
+      {"type": "Obstacle", "position": {"x": 4, "y": 1}},
+      {"type": "Obstacle", "position": {"x": 4, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 4, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 6, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 4}},
+
+      {"type": "Cetatean", "identifier": "C01", "position": {"x": 0, "y": 4}, "direction": "RIGHT"}
+    ]
+  }
+}

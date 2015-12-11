@@ -72,11 +72,11 @@ namespace CodeInterpreter {
     }
   }
 
-  public class StackMachineState {
-    private StackMachineState() { }
+  public class RegisterMachineState {
+    private RegisterMachineState() { }
     private readonly Instruction[] code;
 
-    public StackMachineState(Instruction[] instructions) {
+    public RegisterMachineState(Instruction[] instructions) {
       InstructionPointer = 0;
       this.code = instructions;
     }
@@ -104,7 +104,7 @@ namespace CodeInterpreter {
     }
   }
 
-  public class StackMachine {
+  public class RegisterMachine {
     public int[] Memory { get; set; }
     // registers
     public int A;
@@ -112,11 +112,11 @@ namespace CodeInterpreter {
 
     public int Cycles { get; private set; }
 
-    public StackMachine() {
+    public RegisterMachine() {
       Memory = new int[1000000];
     }
 
-    public StackMachine(uint memoryCapacity) {
+    public RegisterMachine(uint memoryCapacity) {
       Memory = new int[memoryCapacity];
     }
 
@@ -127,7 +127,7 @@ namespace CodeInterpreter {
         Memory = new int[Memory.Length];
         Cycles = 0;
       }
-      var state = new StackMachineState(instructions);
+      var state = new RegisterMachineState(instructions);
       Instruction instr;
       do {
         Cycles++;

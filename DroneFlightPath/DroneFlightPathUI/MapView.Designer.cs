@@ -1,4 +1,4 @@
-﻿namespace DroneFlightPath {
+﻿namespace DroneFlightPathUI {
   partial class MapView {
     /// <summary>
     /// Required designer variable.
@@ -29,6 +29,7 @@
       this.button_Pause = new System.Windows.Forms.Button();
       this.imageList1 = new System.Windows.Forms.ImageList(this.components);
       this.pictureBox = new System.Windows.Forms.PictureBox();
+      this.button_Load = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
       this.SuspendLayout();
       // 
@@ -72,20 +73,31 @@
             | System.Windows.Forms.AnchorStyles.Right)));
       this.pictureBox.Location = new System.Drawing.Point(3, 31);
       this.pictureBox.Name = "pictureBox";
-      this.pictureBox.Size = new System.Drawing.Size(812, 662);
+      this.pictureBox.Size = new System.Drawing.Size(937, 662);
       this.pictureBox.TabIndex = 1;
       this.pictureBox.TabStop = false;
       // 
-      // Map
+      // button_Load
+      // 
+      this.button_Load.Location = new System.Drawing.Point(865, 2);
+      this.button_Load.Name = "button_Load";
+      this.button_Load.Size = new System.Drawing.Size(75, 23);
+      this.button_Load.TabIndex = 0;
+      this.button_Load.Text = "Load Map";
+      this.button_Load.UseVisualStyleBackColor = true;
+      this.button_Load.Click += new System.EventHandler(this.button_Load_Click);
+      // 
+      // MapView
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(952, 705);
       this.Controls.Add(this.pictureBox);
+      this.Controls.Add(this.button_Load);
       this.Controls.Add(this.button_Pause);
       this.Controls.Add(this.button_Step);
       this.Controls.Add(this.button_Run);
-      this.Name = "Map";
+      this.Name = "MapView";
       this.Text = "Map";
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
       this.ResumeLayout(false);
@@ -99,5 +111,6 @@
     private System.Windows.Forms.Button button_Pause;
     private System.Windows.Forms.ImageList imageList1;
     private System.Windows.Forms.PictureBox pictureBox;
+    private System.Windows.Forms.Button button_Load;
   }
 }

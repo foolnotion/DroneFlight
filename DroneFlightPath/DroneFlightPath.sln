@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DroneFlightPath", "DroneFlightPath\DroneFlightPath.csproj", "{0C31B498-1E6B-445A-8F95-D7B470AA9D6F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeInterpreter", "CodeInterpreter\CodeInterpreter.csproj", "{83694BB7-212A-424A-8CD7-5802715462BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DroneFlightPathUI", "DroneFlightPathUI\DroneFlightPathUI.csproj", "{34BB313C-DC2E-4922-BB78-2706F46DC698}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{83694BB7-212A-424A-8CD7-5802715462BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83694BB7-212A-424A-8CD7-5802715462BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83694BB7-212A-424A-8CD7-5802715462BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34BB313C-DC2E-4922-BB78-2706F46DC698}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34BB313C-DC2E-4922-BB78-2706F46DC698}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34BB313C-DC2E-4922-BB78-2706F46DC698}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34BB313C-DC2E-4922-BB78-2706F46DC698}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

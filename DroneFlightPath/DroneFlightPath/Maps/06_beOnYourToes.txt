@@ -1,0 +1,57 @@
+{
+  "simulatedDrone": {"type": "Drone", "identifier": "@", "position": {"x": 3, "y": 0}},
+  "map": {
+    "cols": 20,
+    "rows": 20,
+    "target": {"x": 17, "y": 12},
+    "objects": [
+      {"type": "Obstacle", "position": {"x": 3, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 4, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 7}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 9}},
+      {"type": "Obstacle", "position": {"x": 16, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 17, "y": 14}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 14}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 14, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 16, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 17, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 19, "y": 11}},
+      {"type": "Cetatean", "identifier": "C01", "position": {"x": 0, "y": 6}, "direction": "RIGHT"},
+      {"type": "Drone", "identifier": "D01", "position": {"x": 6, "y": 19}, "controller": {"type": "Direction", "direction": "UP"}},
+      {"type": "Drone", "identifier": "D02", "position": {"x": 16, "y": 0}, "controller": {"type": "Target", "target": {"x": 10, "y": 5}}}
+    ]
+  },
+  "steps": [
+    {
+      "stepNumber": 4,
+      "objects": [
+        {"type": "Drone", "identifier": "D03", "position": {"x": 0, "y": 14}, "controller": {"type": "Direction", "direction": "RIGHT"}}
+      ]
+    },
+    {
+      "stepNumber": 9,
+      "objects": [
+        {"type": "Drone", "identifier": "D10", "position": {"x": 19, "y": 7}, "controller": {"type": "Target", "target": {"x": 15, "y": 19}}}
+      ]
+    }, {
+      "stepNumber": 19,
+      "objects": [
+        {"type": "Cetatean",  "identifier": "C02", "position": {"x": 19, "y": 15}, "direction": "LEFT"},
+        {"type": "Drone", "identifier": "D05", "position": {"x": 19, "y": 19}, "controller": {"type": "Direction", "direction": "UP"}}
+      ]
+    }, {
+      "stepNumber": 21,
+      "objects": [
+        {"type": "Cetatean", "identifier": "C03", "position": {"x": 16, "y": 19}, "direction": "UP"},
+        {"type": "Cetatean", "identifier": "C04", "position": {"x": 19, "y": 6}, "direction": "LEFT"},
+        {"type": "Drone", "identifier": "D06", "position": {"x": 12, "y": 19}, "controller": {"type": "Direction", "direction": "UP"}},
+        {"type": "Drone", "identifier": "D07", "position": {"x": 0, "y": 11}, "controller": {"type": "Direction", "direction": "RIGHT"}}
+      ]
+    }
+  ]
+}
