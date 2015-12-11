@@ -16,6 +16,7 @@ namespace CodeInterpreter {
     };
 
     public static IEnumerable<Instruction> LoadSource(string path) {
+
       var lines = File.ReadAllLines(path).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToList();
       foreach (var line in lines) {
         var tokens = line.Split();

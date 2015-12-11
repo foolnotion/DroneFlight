@@ -1,11 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using CodeInterpreter;
 
 namespace DroneFlightPath {
   class Program {
     static void Main(string[] args) {
-      var code = StackMachineUtil.LoadSource(@"C:\Users\Bogdan\Projects\TechOn2015\DroneFlightPath\DroneFlightPath\TestFile\01_letsGetToKnowEachOther_s3.txt").ToArray();
+      var path = Path.GetFullPath(Path.Combine(System.Environment.CurrentDirectory, @"..\..\TestFile\01_letsGetToKnowEachOther_s3.txt"));
+      var code = StackMachineUtil.LoadSource(path).ToArray();
       var sm = new StackMachine(1001);
 
       const int steps = 12;
@@ -18,6 +20,8 @@ namespace DroneFlightPath {
 
       var score = mapWeight * 1e6 / Math.Log(steps * steps * sm.Cycles);
       Console.WriteLine("Score: {0:0.00}", score);
+
+      Console.Read();
     }
   }
 }
