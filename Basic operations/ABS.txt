@@ -1,0 +1,6 @@
+LDA [1000]
+JGA [N]
+LDA 0
+SUBA [1000]
+STA[1000]
+JGA [N]
