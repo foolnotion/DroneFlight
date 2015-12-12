@@ -34,7 +34,7 @@ namespace DroneFlightPath {
     public virtual bool CollidesWith(Object other) {
       if (other.Type == ObjectType.Citizen)
         return other.CollidesWith(this);
-      return Position.X == other.Position.X && Position.Y == other.Position.Y;
+      return Position == other.Position;
     }
   }
 
@@ -65,6 +65,8 @@ namespace DroneFlightPath {
           break;
         case Direction.Right:
           x++;
+          break;
+        case Direction.Hold:
           break;
         default:
           throw new InvalidOperationException($"Unsupported direction {Direction}");
@@ -97,8 +99,8 @@ namespace DroneFlightPath {
   }
 
   public class Map {
-    private List<Object> objects;
-    public IEnumerable<Object> ActiveObjects { get { return objects.Where(x => x.Step <= TimeStep); } }
+    private List<Object> mapObjects;
+    public IEnumerable<Object> ActiveObjects { get { return mapObjects.Where(x => x.Step <= TimeStep); } }
     //    public IEnumerable<Object> Obstacles { get { return ActiveObjects.Where(x => x.Type == ObjectType.Obstacle); } }
     //    public IEnumerable<Object> Drones { get { return ActiveObjects.Where(x => x.Type == ObjectType.Drone); } }
     //    public IEnumerable<Object> Citizens { get { return ActiveObjects.Where(x => x.Type == ObjectType.Citizen); } }
@@ -106,7 +108,7 @@ namespace DroneFlightPath {
     public int Rows { get; set; }
     public int Cols { get; set; }
     public Point Target { get; set; }
-    public Object Drone { get; set; }
+    public Drone Drone { get; set; }
 
     public void MoveUp() { Drone.Position = new Point(Drone.Position.X, Drone.Position.Y - 1); }
     public void MoveDown() { Drone.Position = new Point(Drone.Position.X, Drone.Position.Y + 1); }
@@ -126,33 +128,32 @@ namespace DroneFlightPath {
         o.Move();
       }
       // remove objects that have already exited the map
-      objects = objects.Where(x => x.Type != ObjectType.Obstacle && x.IsStillOnMap).ToList();
+      mapObjects = mapObjects.Where(x => x.Type == ObjectType.Obstacle || x.IsStillOnMap).ToList();
     }
 
     private void ResolveCollisions() {
       var activeObjects = ActiveObjects.ToList();
       for (int i = 0; i < activeObjects.Count; ++i) {
         var oi = activeObjects[i];
-        if (oi.Type == ObjectType.Drone) continue;
         for (int j = 0; j < activeObjects.Count; ++j) {
           if (i == j) continue;
           var oj = activeObjects[j];
           if (oj.Type != ObjectType.Drone) continue;
-          oj.IsDead = oj.CollidesWith(oi);
+          oj.IsDead |= oj.CollidesWith(oi);
         }
       }
-      objects = objects.Where(x => !x.IsDead).ToList();
+      mapObjects = mapObjects.Where(x => !x.IsDead).ToList();
     }
 
     public void AddObject(Object obj) {
       var p = obj.Position;
       if (!(p.X >= 0 && p.X < Rows && p.Y >= 0 && p.Y < Cols))
         throw new ArgumentException($"Position {obj.Position} of object {obj.Id} is outside the map.");
-      var o = objects.FirstOrDefault(x => x.Position == obj.Position);
+      var o = mapObjects.FirstOrDefault(x => x.Position == obj.Position);
       if (o != null)
         throw new ArgumentException($"Cannot add object {obj.Id} at position {obj.Position} since it would overlap with already existing object {o.Id}");
       obj.Map = this;
-      objects.Add(obj);
+      mapObjects.Add(obj);
     }
     public void AddObjects(IEnumerable<Object> objects) {
       foreach (var o in objects) AddObject(o);
@@ -162,8 +163,8 @@ namespace DroneFlightPath {
       Target = target;
       Rows = rows;
       Cols = cols;
-      Drone = new Drone(this, new Point(dronePosition.X, dronePosition.Y), "@", ControllerType.Target, new Point(Target.X, target.Y), Direction.Hold);
-      this.objects = new List<Object>();
+      Drone = new Drone(this, new Point(dronePosition.X, dronePosition.Y), "@", ControllerType.Direction, new Point(Target.X, target.Y), Direction.Hold);
+      this.mapObjects = new List<Object>();
     }
     public Map(IEnumerable<Object> objects, Point target, Point drone, int rows, int cols) : this(target, drone, rows, cols) {
       AddObjects(objects);

@@ -29,7 +29,8 @@
       this.button_Pause = new System.Windows.Forms.Button();
       this.imageList1 = new System.Windows.Forms.ImageList(this.components);
       this.pictureBox = new System.Windows.Forms.PictureBox();
-      this.button_Load = new System.Windows.Forms.Button();
+      this.button_LoadMap = new System.Windows.Forms.Button();
+      this.button_LoadSolution = new System.Windows.Forms.Button();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
       this.SuspendLayout();
       // 
@@ -50,6 +51,7 @@
       this.button_Step.TabIndex = 0;
       this.button_Step.Text = "Step";
       this.button_Step.UseVisualStyleBackColor = true;
+      this.button_Step.Click += new System.EventHandler(this.button_Step_Click);
       // 
       // button_Pause
       // 
@@ -77,15 +79,25 @@
       this.pictureBox.TabIndex = 1;
       this.pictureBox.TabStop = false;
       // 
-      // button_Load
+      // button_LoadMap
       // 
-      this.button_Load.Location = new System.Drawing.Point(865, 2);
-      this.button_Load.Name = "button_Load";
-      this.button_Load.Size = new System.Drawing.Size(75, 23);
-      this.button_Load.TabIndex = 0;
-      this.button_Load.Text = "Load Map";
-      this.button_Load.UseVisualStyleBackColor = true;
-      this.button_Load.Click += new System.EventHandler(this.button_Load_Click);
+      this.button_LoadMap.Location = new System.Drawing.Point(865, 2);
+      this.button_LoadMap.Name = "button_LoadMap";
+      this.button_LoadMap.Size = new System.Drawing.Size(75, 23);
+      this.button_LoadMap.TabIndex = 0;
+      this.button_LoadMap.Text = "Load Map";
+      this.button_LoadMap.UseVisualStyleBackColor = true;
+      this.button_LoadMap.Click += new System.EventHandler(this.button_LoadMap_Click);
+      // 
+      // button_LoadSolution
+      // 
+      this.button_LoadSolution.Location = new System.Drawing.Point(776, 2);
+      this.button_LoadSolution.Name = "button_LoadSolution";
+      this.button_LoadSolution.Size = new System.Drawing.Size(83, 23);
+      this.button_LoadSolution.TabIndex = 0;
+      this.button_LoadSolution.Text = "Load Solution";
+      this.button_LoadSolution.UseVisualStyleBackColor = true;
+      this.button_LoadSolution.Click += new System.EventHandler(this.button_LoadSolution_Click);
       // 
       // MapView
       // 
@@ -93,7 +105,8 @@
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(952, 705);
       this.Controls.Add(this.pictureBox);
-      this.Controls.Add(this.button_Load);
+      this.Controls.Add(this.button_LoadSolution);
+      this.Controls.Add(this.button_LoadMap);
       this.Controls.Add(this.button_Pause);
       this.Controls.Add(this.button_Step);
       this.Controls.Add(this.button_Run);
@@ -111,6 +124,7 @@
     private System.Windows.Forms.Button button_Pause;
     private System.Windows.Forms.ImageList imageList1;
     private System.Windows.Forms.PictureBox pictureBox;
-    private System.Windows.Forms.Button button_Load;
+    private System.Windows.Forms.Button button_LoadMap;
+    private System.Windows.Forms.Button button_LoadSolution;
   }
 }

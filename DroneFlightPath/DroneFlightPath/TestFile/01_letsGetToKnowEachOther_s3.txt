@@ -5,7 +5,7 @@ ADDA 8     // A = A+1
 STA [1000] // Mem[1000] = A
 LDA 3
 STA [0]
-HLT
+HL
 LDA 2      // A=2
 STA [0]
 HLT

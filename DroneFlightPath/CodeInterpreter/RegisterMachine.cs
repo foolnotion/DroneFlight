@@ -110,6 +110,8 @@ namespace CodeInterpreter {
     public int A;
     public int N;
 
+    private RegisterMachineState state;
+
     public int Cycles { get; private set; }
 
     public RegisterMachine() {
@@ -120,57 +122,77 @@ namespace CodeInterpreter {
       Memory = new int[memoryCapacity];
     }
 
-    public int Execute(Instruction[] instructions, bool reset = false) {
+    public void LoadIntructions(Instruction[] instructions) {
+      state = new RegisterMachineState(instructions);
+    }
+
+    public void Step() {
+      if (state == null)
+        throw new InvalidOperationException(
+          $"State is null. Please use the LoadInstructions method to load some instructions first.");
+
+      ExecuteInstruction(state.NextInstruction());
+    }
+
+    public void ExecuteInstruction(Instruction instr) {
+      switch (instr.OpCode) {
+        case OpCode.Sta: {
+            if (instr.Arg.Type == ArgType.Value)
+              throw new ArgumentException("Argument has to be a reference to a register or a memory location.");
+            if (instr.Arg.Type == ArgType.RefMem)
+              Memory[instr.Arg.Value] = A;
+            else if (instr.Arg.Type == ArgType.RefN)
+              Memory[N] = A;
+            else if (instr.Arg.Type == ArgType.RefA)
+              Memory[A] = A;
+          }
+          break;
+        case OpCode.Lda: {
+            A = EvaluateArg(instr.Arg);
+            break;
+          }
+        case OpCode.Ldn: {
+            N = EvaluateArg(instr.Arg);
+            break;
+          }
+        case OpCode.Adda: {
+            A += EvaluateArg(instr.Arg);
+            break;
+          }
+        case OpCode.Suba: {
+            A -= EvaluateArg(instr.Arg);
+            break;
+          }
+        case OpCode.Jge: {
+            if (A >= 0)
+              state.Jump(EvaluateArg(instr.Arg));
+            break;
+          }
+        case OpCode.Hlt: {
+            break;
+          }
+        default:
+          throw new ArgumentException(string.Format("Invalid OpCode {0}", instr.OpCode));
+      }
+    }
+
+    public int Run(bool reset = false) {
+      if (state == null)
+        throw new InvalidOperationException(
+          $"State is null. Please use the LoadInstructions method to load some instructions first.");
+      state.Reset(); // rewind the instruction pointer
+
       if (reset) {
         A = 0;
         N = 0;
         Memory = new int[Memory.Length];
         Cycles = 0;
       }
-      var state = new RegisterMachineState(instructions);
       Instruction instr;
       do {
         Cycles++;
         instr = state.NextInstruction();
-        switch (instr.OpCode) {
-          case OpCode.Sta: {
-              if (instr.Arg.Type == ArgType.Value)
-                throw new ArgumentException("Argument has to be a reference to a register or a memory location.");
-              if (instr.Arg.Type == ArgType.RefMem)
-                Memory[instr.Arg.Value] = A;
-              else if (instr.Arg.Type == ArgType.RefN)
-                Memory[N] = A;
-              else if (instr.Arg.Type == ArgType.RefA)
-                Memory[A] = A;
-            }
-            break;
-          case OpCode.Lda: {
-              A = EvaluateArg(instr.Arg);
-              break;
-            }
-          case OpCode.Ldn: {
-              N = EvaluateArg(instr.Arg);
-              break;
-            }
-          case OpCode.Adda: {
-              A += EvaluateArg(instr.Arg);
-              break;
-            }
-          case OpCode.Suba: {
-              A -= EvaluateArg(instr.Arg);
-              break;
-            }
-          case OpCode.Jge: {
-              if (A < 0) continue;
-              state.Jump(EvaluateArg(instr.Arg));
-              break;
-            }
-          case OpCode.Hlt: {
-              break;
-            }
-          default:
-            throw new ArgumentException(string.Format("Invalid OpCode {0}", instr.OpCode));
-        }
+        ExecuteInstruction(instr);
       } while (instr.OpCode != OpCode.Hlt);
       return A;
     }

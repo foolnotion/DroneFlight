@@ -82,6 +82,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CodeInterpreter\CodeInterpreter.csproj">
+      <Project>{83694bb7-212a-424a-8cd7-5802715462ba}</Project>
+      <Name>CodeInterpreter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DroneFlightPath\DroneFlightPath.csproj">
       <Project>{0c31b498-1e6b-445a-8f95-d7b470aa9d6f}</Project>
       <Name>DroneFlightPath</Name>
