@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows.Forms;
 using CodeInterpreter;
 using DroneFlightPath;
+using DroneFlightPathUI.Models;
 
 namespace DroneFlightPathUI {
   public partial class MapView : Form {
@@ -26,6 +27,8 @@ namespace DroneFlightPathUI {
     private const int SquareSize = 25;
 
     private Map map;
+    private BindingSource watchDataSource;
+    private double mapWeight;
 
     public Map Map {
       get { return map; }
@@ -45,6 +48,150 @@ namespace DroneFlightPathUI {
           @"..\..\..\DroneFlightPath\Maps\01_letsGetToKnowEachOther.txt"));
       var m = MapUtil.LoadPath(path);
       Map = m;
+      InitWatchDataView();
+      mapWeight = 0.1;
+    }
+
+    private void InitWatchDataView() {
+      watchDataSource = new BindingSource();
+
+      watchDataSource.Add(new VariableModel() { Name = "A", Value = 0 });
+      watchDataSource.Add(new VariableModel() { Name = "N", Value = 0 });
+
+
+      watchDataView.CellClick += WatchDataView_CellClick;
+      watchDataView.CellEndEdit += WatchDataView_CellEndEdit;
+      watchDataView.CellValidating += WatchDataView_CellValidating;
+
+      watchDataView.AutoGenerateColumns = false;
+      watchDataView.AutoSize = false;
+      watchDataView.DataSource = watchDataSource;
+      
+
+      var nameColumn = new DataGridViewTextBoxColumn();
+      nameColumn.DataPropertyName = "Name";
+      nameColumn.Name = "Variable name";
+      nameColumn.Width = 100;
+      watchDataView.Columns.Add(nameColumn);
+
+      var valueColumn = new DataGridViewTextBoxColumn();
+      valueColumn.DataPropertyName = "Value";
+      valueColumn.Name = "Value";
+      valueColumn.ReadOnly = true;
+      valueColumn.Width = 100;
+      watchDataView.Columns.Add(valueColumn);
+
+
+      var deleteColumn = new DataGridViewButtonColumn();
+      deleteColumn.Text = "X";
+      deleteColumn.UseColumnTextForButtonValue = true;
+      deleteColumn.Width = 30;
+      deleteColumn.Name = "deleteColumn";
+      deleteColumn.HeaderText = "";
+      watchDataView.Columns.Add(deleteColumn);
+
+    }
+
+    private void WatchDataView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
+      string columnName = watchDataView.Columns[e.ColumnIndex].Name;
+
+      if (!columnName.Equals("Variable name"))
+        return;
+
+
+      if (!VariableNameIsCorrect(e.FormattedValue.ToString())) {
+        watchDataView.Rows[e.RowIndex].ErrorText =
+            "Enter A, N or an interger value";
+        e.Cancel = true;
+      }
+    }
+
+    private bool VariableNameIsCorrect(string variableName) {
+      if (variableName == "A" || variableName == "N")
+        return true;
+      int parsedArgument = 0;
+      if (int.TryParse(variableName, out parsedArgument)) {
+        return true;
+      }
+      return false;
+    }
+
+    private void WatchDataView_CellEndEdit(object sender, DataGridViewCellEventArgs e) {
+
+      if (e.RowIndex < 0)
+        return;
+      watchDataView.Rows[e.RowIndex].ErrorText = String.Empty;
+
+      var row = watchDataView.CurrentRow;
+      var valueCell = row.Cells[1];
+      if (row.Cells[0].Value == null) {
+        return;
+      }
+      var variableName = row.Cells[0].Value.ToString();
+      valueCell.Value = GetMemoryValueForVariableName(variableName);
+    }
+
+    private int GetMemoryValueForVariableName(string variableName) {
+      if (variableName == "A") {
+        return machine.A;
+      }
+
+      if (variableName == "N") {
+        return machine.N;
+      }
+
+      int memAddress = int.Parse(variableName);
+      return machine.Memory[memAddress];
+
+    }
+    private void WatchDataView_CellClick(object sender, DataGridViewCellEventArgs e) {
+      //if click is on new row or header row
+      if (e.RowIndex == watchDataView.NewRowIndex || e.RowIndex < 0)
+        return;
+
+      //Handle Button Column Click
+      if (e.ColumnIndex == watchDataView.Columns["deleteColumn"].Index) {
+        watchDataView.Rows.Remove(watchDataView.Rows[e.RowIndex]);
+      }
+    }
+
+    private void UpdateWatchVariables() {
+      foreach (DataGridViewRow row in watchDataView.Rows) {
+        if (row.Cells[0].Value != null) {
+          var variableName = row.Cells[0].Value.ToString();
+          var oldValue = (int)row.Cells[1].Value;
+          var newValue = GetMemoryValueForVariableName(variableName);
+          row.Cells[1].Value = newValue;
+          if(newValue == oldValue) {
+            row.Cells[1].Style = new DataGridViewCellStyle { ForeColor = Color.Black };
+          }
+          else {
+            row.Cells[1].Style = new DataGridViewCellStyle { ForeColor = Color.Red };
+          }
+        }
+      }
+    }
+
+    private void UpdateRunInfo() {
+      var steps = map.TimeStep;
+      var cycles = machine.Cycles;
+      scoreValueLabel.Text = (mapWeight * 1e6 / Math.Log(steps * steps * cycles)).ToString(".##") ;
+      cyclesValueLabel.Text = cycles.ToString();
+      stepsValueLabel.Text = steps.ToString();
+    }
+
+    private void ClearRunInfo() {
+      scoreValueLabel.Text = "0";
+      cyclesValueLabel.Text = "0";
+      stepsValueLabel.Text = "0";
+    }
+
+    private void ClearWatchVariables() {
+      foreach (DataGridViewRow row in watchDataView.Rows) {
+        if (row.Cells[0].Value != null) {
+          row.Cells[1].Value = 0;
+        }
+      }
     }
 
     public void DrawMap() {
@@ -97,28 +244,32 @@ namespace DroneFlightPathUI {
             if (drone != null && drone.ControllerType != ControllerType.Direction) continue;
             float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
             switch (m.Direction) {
-              case Direction.Down: {
+              case Direction.Down:
+                {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
                   y2 = Math.Min(y1 + SquareSize, map.Rows * SquareSize);
                   break;
                 }
-              case Direction.Up: {
+              case Direction.Up:
+                {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
                   y2 = Math.Max(0, y1 - SquareSize);
                   break;
                 }
-              case Direction.Left: {
+              case Direction.Left:
+                {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = Math.Max(0, x1 - SquareSize);
                   y2 = y1;
                   break;
                 }
-              case Direction.Right: {
+              case Direction.Right:
+                {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = Math.Min(x1 + SquareSize, map.Cols * SquareSize);
@@ -191,11 +342,15 @@ namespace DroneFlightPathUI {
           var code = RegisterMachineUtil.LoadPath(path).ToArray();
           machine = new RegisterMachine();
           machine.LoadIntructions(code);
+          ClearWatchVariables();
+          ClearRunInfo();
         }
         catch (Exception ex) {
           MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
         }
       }
+
+    
     }
 
     private void button_Step_Click(object sender, EventArgs e) {
@@ -205,6 +360,8 @@ namespace DroneFlightPathUI {
         map.Drone.Direction = direction;
         map.Step();
         Draw();
+        UpdateWatchVariables();
+        UpdateRunInfo();
       }
       catch (Exception exception) {
         MessageBox.Show(exception.Message, "Step", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -216,21 +373,27 @@ namespace DroneFlightPathUI {
       switch (mapComboBox.SelectedIndex) {
         case 0:
           res = Properties.Resources._01_letsGetToKnowEachOther;
+          mapWeight = 0.1;
           break;
         case 1:
           res = Properties.Resources._02_dontGetShot;
+          mapWeight = 0.2;
           break;
         case 2:
           res = Properties.Resources._03_shortestPath;
+          mapWeight = 0.3;
           break;
         case 3:
           res = Properties.Resources._04_gottaCircleAround;
+          mapWeight = 0.4;
           break;
         case 4:
           res = Properties.Resources._05_thinkAhead;
+          mapWeight = 0.5;
           break;
         case 5:
           res = Properties.Resources._06_beOnYourToes;
+          mapWeight = 0.6;
           break;
         default:
           throw new Exception("Unknown resource index");

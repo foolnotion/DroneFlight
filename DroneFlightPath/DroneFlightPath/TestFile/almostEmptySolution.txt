@@ -1,0 +1,8 @@
+lda [1]
+adda 1
+sta [1]
+suba 2
+sta [2]
+ldn [2]
+lda 4
+hlt
