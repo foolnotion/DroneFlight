@@ -117,7 +117,7 @@
       // 
       this.watchDataView.BackgroundColor = System.Drawing.Color.White;
       this.watchDataView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-      this.watchDataView.Location = new System.Drawing.Point(946, 31);
+      this.watchDataView.Location = new System.Drawing.Point(989, 12);
       this.watchDataView.Name = "watchDataView";
       this.watchDataView.Size = new System.Drawing.Size(299, 296);
       this.watchDataView.TabIndex = 4;
@@ -126,7 +126,7 @@
       // 
       this.scoreTextLabel.AutoSize = true;
       this.scoreTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.scoreTextLabel.Location = new System.Drawing.Point(946, 606);
+      this.scoreTextLabel.Location = new System.Drawing.Point(982, 622);
       this.scoreTextLabel.Name = "scoreTextLabel";
       this.scoreTextLabel.Size = new System.Drawing.Size(106, 39);
       this.scoreTextLabel.TabIndex = 5;
@@ -136,7 +136,7 @@
       // 
       this.scoreValueLabel.AutoSize = true;
       this.scoreValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.scoreValueLabel.Location = new System.Drawing.Point(1058, 606);
+      this.scoreValueLabel.Location = new System.Drawing.Point(1094, 622);
       this.scoreValueLabel.Name = "scoreValueLabel";
       this.scoreValueLabel.Size = new System.Drawing.Size(35, 39);
       this.scoreValueLabel.TabIndex = 6;
@@ -149,7 +149,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
       this.pictureBox.Location = new System.Drawing.Point(3, 31);
       this.pictureBox.Name = "pictureBox";
-      this.pictureBox.Size = new System.Drawing.Size(937, 662);
+      this.pictureBox.Size = new System.Drawing.Size(973, 662);
       this.pictureBox.TabIndex = 1;
       this.pictureBox.TabStop = false;
       // 
@@ -157,7 +157,7 @@
       // 
       this.cyclesTextLabel.AutoSize = true;
       this.cyclesTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.cyclesTextLabel.Location = new System.Drawing.Point(946, 567);
+      this.cyclesTextLabel.Location = new System.Drawing.Point(982, 583);
       this.cyclesTextLabel.Name = "cyclesTextLabel";
       this.cyclesTextLabel.Size = new System.Drawing.Size(120, 39);
       this.cyclesTextLabel.TabIndex = 7;
@@ -167,7 +167,7 @@
       // 
       this.cyclesValueLabel.AutoSize = true;
       this.cyclesValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.cyclesValueLabel.Location = new System.Drawing.Point(1058, 567);
+      this.cyclesValueLabel.Location = new System.Drawing.Point(1094, 583);
       this.cyclesValueLabel.Name = "cyclesValueLabel";
       this.cyclesValueLabel.Size = new System.Drawing.Size(35, 39);
       this.cyclesValueLabel.TabIndex = 8;
@@ -177,7 +177,7 @@
       // 
       this.stepTextLabel.AutoSize = true;
       this.stepTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.stepTextLabel.Location = new System.Drawing.Point(946, 528);
+      this.stepTextLabel.Location = new System.Drawing.Point(982, 544);
       this.stepTextLabel.Name = "stepTextLabel";
       this.stepTextLabel.Size = new System.Drawing.Size(98, 39);
       this.stepTextLabel.TabIndex = 9;
@@ -187,7 +187,7 @@
       // 
       this.stepsValueLabel.AutoSize = true;
       this.stepsValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.stepsValueLabel.Location = new System.Drawing.Point(1058, 528);
+      this.stepsValueLabel.Location = new System.Drawing.Point(1094, 544);
       this.stepsValueLabel.Name = "stepsValueLabel";
       this.stepsValueLabel.Size = new System.Drawing.Size(35, 39);
       this.stepsValueLabel.TabIndex = 10;

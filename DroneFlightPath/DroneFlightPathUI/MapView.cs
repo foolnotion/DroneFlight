@@ -49,7 +49,7 @@ namespace DroneFlightPathUI {
       var m = MapUtil.LoadPath(path);
       Map = m;
       InitWatchDataView();
-      mapWeight = 0.1;
+      mapWeight = 0.01;
     }
 
     private void InitWatchDataView() {
@@ -373,27 +373,27 @@ namespace DroneFlightPathUI {
       switch (mapComboBox.SelectedIndex) {
         case 0:
           res = Properties.Resources._01_letsGetToKnowEachOther;
-          mapWeight = 0.1;
+          mapWeight = 0.01;
           break;
         case 1:
           res = Properties.Resources._02_dontGetShot;
-          mapWeight = 0.2;
+          mapWeight = 0.02;
           break;
         case 2:
           res = Properties.Resources._03_shortestPath;
-          mapWeight = 0.3;
+          mapWeight = 0.03;
           break;
         case 3:
           res = Properties.Resources._04_gottaCircleAround;
-          mapWeight = 0.4;
+          mapWeight = 0.04;
           break;
         case 4:
           res = Properties.Resources._05_thinkAhead;
-          mapWeight = 0.5;
+          mapWeight = 0.05;
           break;
         case 5:
           res = Properties.Resources._06_beOnYourToes;
-          mapWeight = 0.6;
+          mapWeight = 0.06;
           break;
         default:
           throw new Exception("Unknown resource index");
