@@ -56,7 +56,11 @@ namespace DroneFlightPathUI {
             int x = i * SquareSize;
             int y = j * SquareSize;
             var rectangle = new Rectangle(x, y, SquareSize, SquareSize);
-            DrawRectangle(g, rectangle, Pens.Black, new SolidBrush(Color.White));
+            DrawRectangle(g, rectangle, Pens.Gray, new SolidBrush(Color.White));
+            if (i % 5 == 0 && j % 5 == 0) {
+              rectangle = new Rectangle(x - 1, y - 1, 2, 2);
+              DrawRectangle(g, rectangle, Pens.Black, Brushes.Black);
+            }
           }
         }
       }

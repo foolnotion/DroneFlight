@@ -24,6 +24,49 @@ namespace DroneFlightPath {
       return Load(JsonConvert.DeserializeObject<JObject>(data));
     }
 
+    private static IEnumerable<Object> ReadObjects(JArray objects) {
+      foreach (var o in objects) {
+        var type = (string)o["type"];
+        Object obj;
+        switch (type) {
+          case "Obstacle": {
+              obj = new Obstacle(null, new Point((int)o["position"]["x"], (int)o["position"]["y"]), "");
+              break;
+            }
+          case "Cetatean": {
+              var id = (string)o["identifier"];
+              var dir = (string)o["direction"];
+              obj = new Citizen(null, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, Directions[dir]);
+              break;
+            }
+          case "Drone": {
+              var id = (string)o["identifier"];
+              var controller = o["controller"];
+              var ct = ControllerTypes[(string)controller["type"]];
+
+              switch (ct) {
+                case ControllerType.Target: {
+                    var t = controller["target"];
+                    obj = new Drone(null, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point((int)t["x"], (int)t["y"]), Direction.Hold);
+                    break;
+                  }
+                case ControllerType.Direction: {
+                    var d = (string)controller["direction"];
+                    obj = new Drone(null, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point(0, 0), Directions[d]);
+                    break;
+                  }
+                default:
+                  throw new InvalidDataException($"Unknown controller type {controller["type"]}");
+              }
+            }
+            break;
+          default:
+            throw new InvalidDataException($"Unknown object type {type}");
+        }
+        yield return obj;
+      }
+    }
+
     private static Map Load(JObject data) {
       var drone = data["simulatedDrone"];
       var pos = drone["position"];
@@ -36,45 +79,19 @@ namespace DroneFlightPath {
 
       var map = new Map(targetPosition, dronePosition, rows, cols);
       var objects = (JArray)mapData["objects"];
-      foreach (var o in objects) {
-        var type = (string)o["type"];
-        Object obj;
-        switch (type) {
-          case "Obstacle": {
-              obj = new Obstacle(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), "");
-              break;
-            }
-          case "Cetatean": {
-              var id = (string)o["identifier"];
-              var dir = (string)o["direction"];
-              obj = new Citizen(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, Directions[dir]);
-              break;
-            }
-          case "Drone": {
-              var id = (string)o["identifier"];
-              var controller = o["controller"];
-              var ct = ControllerTypes[(string)controller["type"]];
+      map.AddObjects(ReadObjects(objects));
 
-              switch (ct) {
-                case ControllerType.Target: {
-                    var t = controller["target"];
-                    obj = new Drone(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point((int)t["x"], (int)t["y"]), Direction.Hold);
-                    break;
-                  }
-                case ControllerType.Direction: {
-                    var d = (string)controller["direction"];
-                    obj = new Drone(map, new Point((int)o["position"]["x"], (int)o["position"]["y"]), id, ct, new Point(0, 0), Directions[d]);
-                    break;
-                  }
-                default:
-                  throw new InvalidDataException($"Unknown controller type {controller["type"]}");
-              }
-            }
-            break;
-          default:
-            throw new InvalidDataException($"Unknown object type {type}");
+      var steps = (JArray)data["steps"];
+      if (steps == null)
+        return map;
+
+      foreach (var step in steps) {
+        var stepNumber = (int)step["stepNumber"];
+        objects = (JArray)step["objects"];
+        foreach (var o in ReadObjects(objects)) {
+          o.Step = stepNumber;
+          map.AddObject(o);
         }
-        map.AddObject(obj);
       }
       return map;
     }
@@ -96,14 +113,16 @@ namespace DroneFlightPath {
 
     public static IEnumerable<Instruction> GenerateMachineCode(MoveInstr[] moveInstructions) {
       yield return new Instruction(OpCode.Lda, new Arg(ArgType.Value, 1000, true));
-      int end = 1 + (moveInstructions.Length - 1) * 5 + 2;
+      //      int end = 1 + (moveInstructions.Length - 1) * 5 + 2;
+      int end = 1 + (moveInstructions.Length - 1) * 4 + 1;
       for (int i = 0; i < moveInstructions.Length - 1; ++i) {
         var mi = moveInstructions[i];
-        var jgeAddr = 1 + (i + 1) * 5;
+        //var jgeAddr = 1 + (i + 1) * 5;
+        var jgeAddr = 1 + (i + 1) * 4;
         yield return new Instruction(OpCode.Suba, new Arg(ArgType.Value, mi.S, false));
         yield return new Instruction(OpCode.Jge, new Arg(ArgType.Value, jgeAddr, false));
         yield return new Instruction(OpCode.Lda, new Arg(ArgType.Value, (int)mi.D, false));
-        yield return new Instruction(OpCode.Sta, new Arg(ArgType.Value, 0, true));
+        //yield return new Instruction(OpCode.Sta, new Arg(ArgType.Value, 0, true));
         yield return new Instruction(OpCode.Jge, new Arg(ArgType.Value, end, false));
       }
       var li = moveInstructions[moveInstructions.Length - 1];

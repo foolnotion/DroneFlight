@@ -17,21 +17,20 @@ namespace DroneFlightPath {
 
     static void Main(string[] args) {
       var nl = Environment.NewLine;
-      var srcPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\TestFile\05_thinkAhead_Generated.txt"));
-      //      var code = RegisterMachineUtil.LoadPath(srcPath).ToArray();
-      var moveInstructions = new[] {
-        new MapUtil.MoveInstr(Direction.Right, 4),
-        new MapUtil.MoveInstr(Direction.Up, 6),
-        new MapUtil.MoveInstr(Direction.Left, 4),
-        new MapUtil.MoveInstr(Direction.Up, 1),
-        new MapUtil.MoveInstr(Direction.Hold, 7),
-        new MapUtil.MoveInstr(Direction.Up, 5),
-        new MapUtil.MoveInstr(Direction.Left, 1),
-        new MapUtil.MoveInstr(Direction.Up, 9),
-        new MapUtil.MoveInstr(Direction.Right, 2),
-      };
-      var steps = moveInstructions.Sum(x => x.S);
-      var code = MapUtil.GenerateMachineCode(moveInstructions).ToArray();
+      var srcPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\TestFile\06_beOnYourToes_Generated.txt"));
+      //      var moveInstructions = new[] {
+      //        new MapUtil.MoveInstr(Direction.Right, 9),
+      //        new MapUtil.MoveInstr(Direction.Down, 2),
+      //        new MapUtil.MoveInstr(Direction.Hold, 4),
+      //        new MapUtil.MoveInstr(Direction.Down, 9),
+      //        new MapUtil.MoveInstr(Direction.Hold, 5),
+      //        new MapUtil.MoveInstr(Direction.Down, 2),
+      //        new MapUtil.MoveInstr(Direction.Right, 5),
+      //        new MapUtil.MoveInstr(Direction.Up, 2),
+      //      };
+      //      var steps = moveInstructions.Sum(x => x.S);
+      //      var code = MapUtil.GenerateMachineCode(moveInstructions).ToArray();
+      var code = RegisterMachineUtil.LoadPath(srcPath).ToArray();
       var sb = new StringBuilder();
       foreach (var instr in code) {
         sb.AppendLine(instr.ToString());
@@ -41,7 +40,8 @@ namespace DroneFlightPath {
       var sm = new RegisterMachine();
       sm.LoadIntructions(code);
 
-      const double mapWeight = 0.05;
+      var steps = 37;
+      const double mapWeight = 0.06;
       for (int i = 0; i < steps; ++i) {
         try {
           sm.Run();
