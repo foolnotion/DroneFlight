@@ -29,14 +29,15 @@
       this.button_Pause = new System.Windows.Forms.Button();
       this.imageList1 = new System.Windows.Forms.ImageList(this.components);
       this.pictureBox = new System.Windows.Forms.PictureBox();
-      this.button_LoadMap = new System.Windows.Forms.Button();
       this.button_LoadSolution = new System.Windows.Forms.Button();
+      this.mapComboBox = new System.Windows.Forms.ComboBox();
+      this.label1 = new System.Windows.Forms.Label();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
       this.SuspendLayout();
       // 
       // button_Run
       // 
-      this.button_Run.Location = new System.Drawing.Point(3, 2);
+      this.button_Run.Location = new System.Drawing.Point(614, 2);
       this.button_Run.Name = "button_Run";
       this.button_Run.Size = new System.Drawing.Size(75, 23);
       this.button_Run.TabIndex = 0;
@@ -45,7 +46,7 @@
       // 
       // button_Step
       // 
-      this.button_Step.Location = new System.Drawing.Point(84, 2);
+      this.button_Step.Location = new System.Drawing.Point(695, 2);
       this.button_Step.Name = "button_Step";
       this.button_Step.Size = new System.Drawing.Size(75, 23);
       this.button_Step.TabIndex = 0;
@@ -55,7 +56,7 @@
       // 
       // button_Pause
       // 
-      this.button_Pause.Location = new System.Drawing.Point(165, 2);
+      this.button_Pause.Location = new System.Drawing.Point(776, 2);
       this.button_Pause.Name = "button_Pause";
       this.button_Pause.Size = new System.Drawing.Size(75, 23);
       this.button_Pause.TabIndex = 0;
@@ -79,19 +80,9 @@
       this.pictureBox.TabIndex = 1;
       this.pictureBox.TabStop = false;
       // 
-      // button_LoadMap
-      // 
-      this.button_LoadMap.Location = new System.Drawing.Point(865, 2);
-      this.button_LoadMap.Name = "button_LoadMap";
-      this.button_LoadMap.Size = new System.Drawing.Size(75, 23);
-      this.button_LoadMap.TabIndex = 0;
-      this.button_LoadMap.Text = "Load Map";
-      this.button_LoadMap.UseVisualStyleBackColor = true;
-      this.button_LoadMap.Click += new System.EventHandler(this.button_LoadMap_Click);
-      // 
       // button_LoadSolution
       // 
-      this.button_LoadSolution.Location = new System.Drawing.Point(776, 2);
+      this.button_LoadSolution.Location = new System.Drawing.Point(857, 2);
       this.button_LoadSolution.Name = "button_LoadSolution";
       this.button_LoadSolution.Size = new System.Drawing.Size(83, 23);
       this.button_LoadSolution.TabIndex = 0;
@@ -99,14 +90,41 @@
       this.button_LoadSolution.UseVisualStyleBackColor = true;
       this.button_LoadSolution.Click += new System.EventHandler(this.button_LoadSolution_Click);
       // 
+      // mapComboBox
+      // 
+      this.mapComboBox.FormattingEnabled = true;
+      this.mapComboBox.Items.AddRange(new object[] {
+            "01_letsGetToKnowEachOther",
+            "02_dontGetShot",
+            "03_shortestPath",
+            "04_gottaCircleAround",
+            "05_thinkAhead",
+            "06_beOnYourToes"});
+      this.mapComboBox.Location = new System.Drawing.Point(49, 4);
+      this.mapComboBox.Name = "mapComboBox";
+      this.mapComboBox.Size = new System.Drawing.Size(559, 21);
+      this.mapComboBox.TabIndex = 2;
+      this.mapComboBox.Text = "01_letsGetToKnowEachOther";
+      this.mapComboBox.SelectedIndexChanged += new System.EventHandler(this.mapComboBox_SelectedIndexChanged);
+      // 
+      // label1
+      // 
+      this.label1.AutoSize = true;
+      this.label1.Location = new System.Drawing.Point(12, 9);
+      this.label1.Name = "label1";
+      this.label1.Size = new System.Drawing.Size(31, 13);
+      this.label1.TabIndex = 3;
+      this.label1.Text = "Map:";
+      // 
       // MapView
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(952, 705);
+      this.Controls.Add(this.label1);
+      this.Controls.Add(this.mapComboBox);
       this.Controls.Add(this.pictureBox);
       this.Controls.Add(this.button_LoadSolution);
-      this.Controls.Add(this.button_LoadMap);
       this.Controls.Add(this.button_Pause);
       this.Controls.Add(this.button_Step);
       this.Controls.Add(this.button_Run);
@@ -114,6 +132,7 @@
       this.Text = "Map";
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
       this.ResumeLayout(false);
+      this.PerformLayout();
 
     }
 
@@ -124,7 +143,8 @@
     private System.Windows.Forms.Button button_Pause;
     private System.Windows.Forms.ImageList imageList1;
     private System.Windows.Forms.PictureBox pictureBox;
-    private System.Windows.Forms.Button button_LoadMap;
     private System.Windows.Forms.Button button_LoadSolution;
+    private System.Windows.Forms.ComboBox mapComboBox;
+    private System.Windows.Forms.Label label1;
   }
 }

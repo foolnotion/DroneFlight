@@ -3,32 +3,37 @@ using System.Text;
 
 namespace CodeInterpreter {
   public enum OpCode : byte { Sta, Lda, Ldn, Adda, Suba, Jge, Hlt }
-  public enum ArgType : byte { RefA, RefN, RefMem, Value }
+  public enum ArgType : byte { RefA, RefN, Value }
 
   public class Arg {
     public ArgType Type;
     public int Value;
+    public bool Indirect; // specifies if the arg value represents a memory address (indirection)
 
     private Arg() { }
 
-    public Arg(ArgType type, int value) {
+    public Arg(ArgType type, int value, bool indirect) {
       Type = type;
       Value = value;
+      Indirect = indirect;
     }
 
     public override string ToString() {
+      string label;
       switch (Type) {
         case ArgType.RefA:
-          return "[A]";
+          label = "A";
+          break;
         case ArgType.RefN:
-          return "[N]";
-        case ArgType.RefMem:
-          return string.Format("[{0}]", Value);
+          label = "N";
+          break;
         case ArgType.Value:
-          return Value.ToString();
+          label = Value.ToString();
+          break;
         default:
           throw new ArgumentException("Unknown arg type");
       }
+      return Indirect ? $"[{label}]" : label;
     }
   }
 
@@ -137,14 +142,23 @@ namespace CodeInterpreter {
     public void ExecuteInstruction(Instruction instr) {
       switch (instr.OpCode) {
         case OpCode.Sta: {
-            if (instr.Arg.Type == ArgType.Value)
-              throw new ArgumentException("Argument has to be a reference to a register or a memory location.");
-            if (instr.Arg.Type == ArgType.RefMem)
-              Memory[instr.Arg.Value] = A;
-            else if (instr.Arg.Type == ArgType.RefN)
-              Memory[N] = A;
-            else if (instr.Arg.Type == ArgType.RefA)
-              Memory[A] = A;
+            var arg = instr.Arg;
+            if (!arg.Indirect)
+              throw new ArgumentException("Argument must be indirect");
+            switch (arg.Type) {
+              case ArgType.Value: {
+                  Memory[arg.Value] = A;
+                  break;
+                }
+              case ArgType.RefN: {
+                  Memory[N] = A;
+                  break;
+                }
+              case ArgType.RefA: {
+                  Memory[A] = A;
+                  break;
+                }
+            }
           }
           break;
         case OpCode.Lda: {
@@ -200,13 +214,11 @@ namespace CodeInterpreter {
     private int EvaluateArg(Arg arg) {
       switch (arg.Type) {
         case ArgType.RefA:
-          return A;
+          return arg.Indirect ? Memory[A] : A;
         case ArgType.RefN:
-          return N;
-        case ArgType.RefMem:
-          return Memory[arg.Value];
+          return arg.Indirect ? Memory[N] : N;
         case ArgType.Value:
-          return arg.Value;
+          return arg.Indirect ? Memory[arg.Value] : arg.Value;
         default:
           throw new Exception(string.Format("Unknown arg type {0}", arg.Type));
       }

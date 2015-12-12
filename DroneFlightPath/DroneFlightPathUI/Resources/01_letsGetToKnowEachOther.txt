@@ -1,0 +1,13 @@
+{
+  "simulatedDrone": {"type": "Drone", "identifier": "@", "position": {"x": 0, "y": 0}},
+  "map": {
+    "rows": 10,
+    "cols": 10,
+    "target": {"x": 5, "y": 7},
+    "objects": [
+      {"type": "Obstacle", "position": {"x": 2, "y": 0}},
+      {"type": "Obstacle", "position": {"x": 2, "y": 1}},
+      {"type": "Obstacle", "position": {"x": 2, "y": 2}}
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "simulatedDrone": {"type": "Drone", "identifier": "@", "position": {"x": 19, "y": 3}},
+  "map": {
+    "rows": 20,
+    "cols": 20,
+    "target": {"x": 13, "y": 16},
+    "objects": [
+      {"type": "Obstacle", "position": {"x": 7, "y": 16}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 15}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 14}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 13}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 11}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 10}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 9}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 8, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 9, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 10, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 11, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 12, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 14, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 16, "y": 8}},
+      {"type": "Obstacle", "position": {"x": 17, "y": 8}},
+
+      {"type": "Obstacle", "position": {"x": 19, "y": 6}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 6}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 5}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 3}},
+      {"type": "Obstacle", "position": {"x": 18, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 17, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 16, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 2}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 3}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 5}},
+      {"type": "Obstacle", "position": {"x": 14, "y": 5}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 5}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 3}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 2}},
+      {"type": "Drone", "identifier": "D01", "position": {"x": 0, "y": 5}, "controller": {"type": "Direction", "direction": "RIGHT"}}
+    ]
+  }
+}

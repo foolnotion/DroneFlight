@@ -60,9 +60,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CodeInterpreter\CodeInterpreter.csproj">
+    <ProjectReference Include="..\CodeInterpreter\DroneComputer.csproj">
       <Project>{83694bb7-212a-424a-8cd7-5802715462ba}</Project>
-      <Name>CodeInterpreter</Name>
+      <Name>DroneComputer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1,1 +1,23 @@
+LDA [1000]
+SUBA 3
+JGE 6 		// --> A
+LDA 0 		// HOLD
+STA [0]
+JGE 19 		// JUMP TO END
+SUBA 3 
+JGE 12 
+LDA 3 		// DOWN
+STA [0]
+JGE 19 		// --> END
+LDA [1000] 	// B
+SUBA 6 
+JGE 17 		// --> C
+LDA 2 		// RIGHT
+STA [0]
+JGE 19		// --> END
+LDA 1 		// UP
+STA [0]
+LDA [1000] 	// END
+ADDA 1
+STA [1000]
 HLT

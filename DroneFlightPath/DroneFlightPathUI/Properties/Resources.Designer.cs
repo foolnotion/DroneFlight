@@ -59,5 +59,132 @@ namespace DroneFlightPathUI.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 0, &quot;y&quot;: 0}},
+        ///  &quot;map&quot;: {
+        ///    &quot;rows&quot;: 10,
+        ///    &quot;cols&quot;: 10,
+        ///    &quot;target&quot;: {&quot;x&quot;: 5, &quot;y&quot;: 7},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 2, &quot;y&quot;: 0}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 2, &quot;y&quot;: 1}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 2, &quot;y&quot;: 2}}
+        ///    ]
+        ///  }
+        ///}.
+        /// </summary>
+        internal static string _01_letsGetToKnowEachOther {
+            get {
+                return ResourceManager.GetString("_01_letsGetToKnowEachOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 0, &quot;y&quot;: 0}},
+        ///  &quot;map&quot;: {
+        ///    &quot;rows&quot;: 10,
+        ///    &quot;cols&quot;: 10,
+        ///    &quot;target&quot;: {&quot;x&quot;: 6, &quot;y&quot;: 2},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 4, &quot;y&quot;: 0}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 4, &quot;y&quot;: 1}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 4, &quot;y&quot;: 2}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 4, &quot;y&quot;: 4}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 5, &quot;y&quot;: 4}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: { [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _02_dontGetShot {
+            get {
+                return ResourceManager.GetString("_02_dontGetShot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 19, &quot;y&quot;: 3}},
+        ///  &quot;map&quot;: {
+        ///    &quot;rows&quot;: 20,
+        ///    &quot;cols&quot;: 20,
+        ///    &quot;target&quot;: {&quot;x&quot;: 13, &quot;y&quot;: 16},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 7, &quot;y&quot;: 16}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 7, &quot;y&quot;: 15}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 7, &quot;y&quot;: 14}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 7, &quot;y&quot;: 13}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 7, &quot;y&quot;: 12}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;posi [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _03_shortestPath {
+            get {
+                return ResourceManager.GetString("_03_shortestPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 1, &quot;y&quot;: 9}},
+        ///  &quot;map&quot;: {
+        ///    &quot;rows&quot;: 25,
+        ///    &quot;cols&quot;: 25,
+        ///    &quot;target&quot;: {&quot;x&quot;: 17, &quot;y&quot;: 19},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 1, &quot;y&quot;: 7}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 2, &quot;y&quot;: 7}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 3, &quot;y&quot;: 7}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 3, &quot;y&quot;: 8}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 3, &quot;y&quot;: 9}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _04_gottaCircleAround {
+            get {
+                return ResourceManager.GetString("_04_gottaCircleAround", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 10, &quot;y&quot;: 24}},
+        ///  &quot;map&quot;: {
+        ///    &quot;rows&quot;: 50,
+        ///    &quot;cols&quot;: 50,
+        ///    &quot;target&quot;: {&quot;x&quot;: 11, &quot;y&quot;: 3},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 11, &quot;y&quot;: 17}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 12, &quot;y&quot;: 17}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 13, &quot;y&quot;: 17}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 14, &quot;y&quot;: 17}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 15, &quot;y&quot;: 17}},
+        ///
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _05_thinkAhead {
+            get {
+                return ResourceManager.GetString("_05_thinkAhead", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;simulatedDrone&quot;: {&quot;type&quot;: &quot;Drone&quot;, &quot;identifier&quot;: &quot;@&quot;, &quot;position&quot;: {&quot;x&quot;: 3, &quot;y&quot;: 0}},
+        ///  &quot;map&quot;: {
+        ///    &quot;cols&quot;: 20,
+        ///    &quot;rows&quot;: 20,
+        ///    &quot;target&quot;: {&quot;x&quot;: 17, &quot;y&quot;: 12},
+        ///    &quot;objects&quot;: [
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 3, &quot;y&quot;: 2}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 4, &quot;y&quot;: 2}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 5, &quot;y&quot;: 2}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 5, &quot;y&quot;: 7}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: {&quot;x&quot;: 5, &quot;y&quot;: 8}},
+        ///      {&quot;type&quot;: &quot;Obstacle&quot;, &quot;position&quot;: [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string _06_beOnYourToes {
+            get {
+                return ResourceManager.GetString("_06_beOnYourToes", resourceCulture);
+            }
+        }
     }
 }
