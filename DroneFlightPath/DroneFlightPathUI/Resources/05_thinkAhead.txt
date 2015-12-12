@@ -1,0 +1,49 @@
+{
+  "simulatedDrone": {"type": "Drone", "identifier": "@", "position": {"x": 10, "y": 24}},
+  "map": {
+    "rows": 50,
+    "cols": 50,
+    "target": {"x": 11, "y": 3},
+    "objects": [
+      {"type": "Obstacle", "position": {"x": 11, "y": 17}},
+      {"type": "Obstacle", "position": {"x": 12, "y": 17}},
+      {"type": "Obstacle", "position": {"x": 13, "y": 17}},
+      {"type": "Obstacle", "position": {"x": 14, "y": 17}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 17}},
+
+      {"type": "Obstacle", "position": {"x": 13, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 14, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 15, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 16, "y": 12}},
+      {"type": "Obstacle", "position": {"x": 17, "y": 12}},
+
+      {"type": "Obstacle", "position": {"x": 4, "y": 9}},
+      {"type": "Obstacle", "position": {"x": 5, "y": 9}},
+      {"type": "Obstacle", "position": {"x": 6, "y": 9}},
+      {"type": "Obstacle", "position": {"x": 7, "y": 9}},
+
+      {"type": "Obstacle", "position": {"x": 10, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 11, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 12, "y": 4}},
+      {"type": "Obstacle", "position": {"x": 12, "y": 3}},
+      {"type": "Obstacle", "position": {"x": 11, "y": 2}},
+
+
+      {"type": "Cetatean", "identifier": "C01", "position": {"x": 3, "y": 24}, "direction": "RIGHT"},
+      {"type": "Cetatean", "identifier": "C02", "position": {"x": 7, "y": 17}, "direction": "DOWN"},
+      {"type": "Cetatean", "identifier": "C03", "position": {"x": 8, "y": 16}, "direction": "DOWN"},
+      {"type": "Cetatean", "identifier": "C04", "position": {"x": 9, "y": 15}, "direction": "DOWN"},
+      {"type": "Cetatean", "identifier": "C05", "position": {"x": 10, "y": 14}, "direction": "DOWN"},
+
+      {"type": "Cetatean", "identifier": "C06", "position": {"x": 29, "y": 13}, "direction": "LEFT"},
+      {"type": "Cetatean", "identifier": "C07", "position": {"x": 7, "y": 49}, "direction": "UP"},
+
+      {"type": "Drone", "identifier": "D01", "position": {"x": 18, "y": 0}, "controller": {"type": "Target", "target": {"x":10, "y": 12}}},
+      {"type": "Drone", "identifier": "D02", "position": {"x": 19, "y": 0}, "controller": {"type": "Target", "target": {"x":11, "y": 12}}},
+      {"type": "Drone", "identifier": "D03", "position": {"x": 20, "y": 0}, "controller": {"type": "Target", "target": {"x":12, "y": 12}}},
+      {"type": "Drone", "identifier": "D04", "position": {"x": 15, "y": 0}, "controller": {"type": "Target", "target": {"x":7, "y": 12}}},
+      {"type": "Drone", "identifier": "D05", "position": {"x": 16, "y": 0}, "controller": {"type": "Target", "target": {"x":8, "y": 12}}},
+      {"type": "Drone", "identifier": "D06", "position": {"x": 17, "y": 0}, "controller": {"type": "Target", "target": {"x":9, "y": 12}}}
+    ]
+  }
+}

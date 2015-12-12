@@ -36,15 +36,14 @@ namespace DroneFlightPathUI {
       }
     }
 
-    private readonly RegisterMachine machine = new RegisterMachine(1000000);
+    private RegisterMachine machine = new RegisterMachine(1000000);
 
     public MapView() {
       InitializeComponent();
 
-      var path =
-        Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
+      var path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
           @"..\..\..\DroneFlightPath\Maps\01_letsGetToKnowEachOther.txt"));
-      var m = MapUtil.ImportMap(path);
+      var m = MapUtil.LoadPath(path);
       Map = m;
     }
 
@@ -85,102 +84,69 @@ namespace DroneFlightPathUI {
           DrawRectangle(g, rectangle, Pens.Black, new SolidBrush(ObjectColors[o.Type]));
           text = ObjectLabels[o.Type];
           size = g.MeasureString(text, font);
-          g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2,
-            rectangle.Y + (rectangle.Height - size.Height) / 2);
+          g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2, rectangle.Y + (rectangle.Height - size.Height) / 2);
 
-          if (o.Type == ObjectType.Drone) {
-            var drone = (Drone)o;
-            if (drone.ControllerType == ControllerType.Direction) {
-              float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-              switch (drone.Direction) {
-                case Direction.Down: {
-                    x1 = (float)(x + 0.5 * SquareSize);
-                    y1 = (float)(y + 0.5 * SquareSize);
-                    x2 = x1;
-                    y2 = (float)(y1 + SquareSize);
-                    break;
-                  }
-                case Direction.Up: {
-                    x1 = (float)(x + 0.5 * SquareSize);
-                    y1 = (float)(y + 0.5 * SquareSize);
-                    x2 = x1;
-                    y2 = (float)(y1 - SquareSize);
-                    break;
-                  }
-                case Direction.Left: {
-                    x1 = (float)(x + 0.5 * SquareSize);
-                    y1 = (float)(y + 0.5 * SquareSize);
-                    x2 = (float)(x1 - SquareSize);
-                    y2 = y1;
-                    break;
-                  }
-                case Direction.Right: {
-                    x1 = (float)(x + 0.5 * SquareSize);
-                    y1 = (float)(y + 0.5 * SquareSize);
-                    x2 = (float)(x1 + SquareSize);
-                    y2 = y1;
-                    break;
-                  }
-              }
-              g.DrawLine(new Pen(Color.Black) { StartCap = LineCap.RoundAnchor, EndCap = LineCap.ArrowAnchor }, x1, y1, x2, y2);
-            }
-          } else if (o.Type == ObjectType.Citizen) {
-            var citizen = (Citizen)o;
+          if (o.Type == ObjectType.Citizen || o.Type == ObjectType.Drone) {
+            var m = (MovingObject)o;
+            var drone = o as Drone;
+            var citizen = o as Citizen;
+            if (drone != null && drone.ControllerType != ControllerType.Direction) continue;
             float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-            switch (citizen.Direction) {
+            switch (m.Direction) {
               case Direction.Down: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
-                  y2 = (float)(y1 + SquareSize);
+                  y2 = Math.Min(y1 + SquareSize, map.Rows * SquareSize);
                   break;
                 }
               case Direction.Up: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
-                  y2 = (float)(y1 - SquareSize);
+                  y2 = Math.Max(0, y1 - SquareSize);
                   break;
                 }
               case Direction.Left: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
-                  x2 = (float)(x1 - SquareSize);
+                  x2 = Math.Max(0, x1 - SquareSize);
                   y2 = y1;
                   break;
                 }
               case Direction.Right: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
-                  x2 = (float)(x1 + SquareSize);
+                  x2 = Math.Min(x1 + SquareSize, map.Cols * SquareSize);
                   y2 = y1;
                   break;
                 }
             }
             g.DrawLine(new Pen(Color.Black) { StartCap = LineCap.RoundAnchor, EndCap = LineCap.ArrowAnchor }, x1, y1, x2, y2);
-            x1 = Math.Max(SquareSize * (citizen.Position.X - 3), 0);
-            y1 = Math.Max(SquareSize * (citizen.Position.Y - 3), 0);
-            x2 = Math.Min(map.Rows * SquareSize, (citizen.Position.X + 4) * SquareSize) - x1;
-            y2 = Math.Min(map.Cols * SquareSize, (citizen.Position.Y + 4) * SquareSize) - y1;
+            if (citizen != null) {
+              x1 = Math.Max(SquareSize * (citizen.Position.X - 3), 0);
+              y1 = Math.Max(SquareSize * (citizen.Position.Y - 3), 0);
+              x2 = Math.Min(map.Rows * SquareSize, (citizen.Position.X + 4) * SquareSize) - x1;
+              y2 = Math.Min(map.Cols * SquareSize, (citizen.Position.Y + 4) * SquareSize) - y1;
 
-            rectangle = new Rectangle((int)x1, (int)y1, (int)x2, (int)y2);
-            DrawRectangle(g, rectangle, new Pen(ObjectColors[citizen.Type]), new SolidBrush(Color.FromArgb(50, ObjectColors[citizen.Type])));
+              rectangle = new Rectangle((int)x1, (int)y1, (int)x2, (int)y2);
+              DrawRectangle(g, rectangle, new Pen(ObjectColors[citizen.Type]), new SolidBrush(Color.FromArgb(50, ObjectColors[citizen.Type])));
+            }
           }
-          text = "@";
-          size = g.MeasureString(text, font);
-          rectangle = new Rectangle(map.Drone.Position.X * SquareSize, map.Drone.Position.Y * SquareSize, SquareSize,
-            SquareSize);
-          DrawRectangle(g, rectangle, Pens.Black, Brushes.Gainsboro);
-          g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2,
-            rectangle.Y + (rectangle.Height - size.Height) / 2);
-
-          text = "T";
-          size = g.MeasureString(text, font);
-          rectangle = new Rectangle(map.Target.X * SquareSize, map.Target.Y * SquareSize, SquareSize, SquareSize);
-          DrawRectangle(g, rectangle, Pens.Black, Brushes.LightGreen);
-          g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2,
-            rectangle.Y + (rectangle.Height - size.Height) / 2);
         }
+
+        text = "@";
+        size = g.MeasureString(text, font);
+        rectangle = new Rectangle(map.Drone.Position.X * SquareSize, map.Drone.Position.Y * SquareSize, SquareSize,
+          SquareSize);
+        DrawRectangle(g, rectangle, Pens.Black, Brushes.Gainsboro);
+        g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2, rectangle.Y + (rectangle.Height - size.Height) / 2);
+
+        text = "T";
+        size = g.MeasureString(text, font);
+        rectangle = new Rectangle(map.Target.X * SquareSize, map.Target.Y * SquareSize, SquareSize, SquareSize);
+        DrawRectangle(g, rectangle, Pens.Black, Brushes.LightGreen);
+        g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2, rectangle.Y + (rectangle.Height - size.Height) / 2);
       }
     }
 
@@ -199,7 +165,7 @@ namespace DroneFlightPathUI {
       if (ofd.ShowDialog() == DialogResult.OK) {
         try {
           var path = Path.Combine(ofd.InitialDirectory, ofd.FileName);
-          var m = MapUtil.ImportMap(path);
+          var m = MapUtil.LoadPath(path);
           Map = m;
         }
         catch (Exception ex) {
@@ -218,7 +184,8 @@ namespace DroneFlightPathUI {
       if (ofd.ShowDialog() == DialogResult.OK) {
         try {
           var path = Path.Combine(ofd.InitialDirectory, ofd.FileName);
-          var code = RegisterMachineUtil.LoadSource(path).ToArray();
+          var code = RegisterMachineUtil.LoadPath(path).ToArray();
+          machine = new RegisterMachine();
           machine.LoadIntructions(code);
         }
         catch (Exception ex) {
@@ -238,6 +205,34 @@ namespace DroneFlightPathUI {
       catch (Exception exception) {
         MessageBox.Show(exception.Message, "Step", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
+    }
+
+    private void mapComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+      string res;
+      switch (mapComboBox.SelectedIndex) {
+        case 0:
+          res = Properties.Resources._01_letsGetToKnowEachOther;
+          break;
+        case 1:
+          res = Properties.Resources._02_dontGetShot;
+          break;
+        case 2:
+          res = Properties.Resources._03_shortestPath;
+          break;
+        case 3:
+          res = Properties.Resources._04_gottaCircleAround;
+          break;
+        case 4:
+          res = Properties.Resources._05_thinkAhead;
+          break;
+        case 5:
+          res = Properties.Resources._06_beOnYourToes;
+          break;
+        default:
+          throw new Exception("Unknown resource index");
+      }
+      Map = MapUtil.Load(res);
+      machine = new RegisterMachine();
     }
   }
 }

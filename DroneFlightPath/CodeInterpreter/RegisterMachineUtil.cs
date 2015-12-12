@@ -15,37 +15,48 @@ namespace CodeInterpreter {
       { "HLT", OpCode.Hlt},
     };
 
-    public static IEnumerable<Instruction> LoadSource(string path) {
-
-      var lines = File.ReadAllLines(path).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToList();
-      foreach (var line in lines) {
-        var tokens = line.Split();
+    public static IEnumerable<Instruction> LoadSource(string source) {
+      foreach (var line in source.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)) {
+        var tokens = line.ToUpper().Split();
         var instrToken = tokens[0];
         var opCode = InstructionOpCodes[instrToken];
         if (opCode != OpCode.Hlt && tokens.Length < 2)
           continue; // garbage. maybe throw exception
-        var arg = opCode == OpCode.Hlt ? new Arg(ArgType.Value, 0) : ParseArg(tokens[1]);
+        var arg = opCode == OpCode.Hlt ? new Arg(ArgType.Value, 0, false) : ParseArg(tokens[1]);
+        yield return new Instruction(opCode, arg);
+      }
+    }
+
+    public static IEnumerable<Instruction> LoadPath(string path) {
+      var lines = File.ReadAllLines(path).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToList();
+      foreach (var line in lines) {
+        var tokens = line.ToUpper().Split();
+        var instrToken = tokens[0];
+        var opCode = InstructionOpCodes[instrToken];
+        if (opCode != OpCode.Hlt && tokens.Length < 2)
+          continue; // garbage. maybe throw exception
+        var arg = opCode == OpCode.Hlt ? new Arg(ArgType.Value, 0, false) : ParseArg(tokens[1]);
         yield return new Instruction(opCode, arg);
       }
     }
 
     public static Arg ParseArg(string arg) {
+      string innerArg;
+      bool indirect;
       if (arg.StartsWith("[")) {
-        var innerArg = arg.Replace("[", "").Replace("]", "");
-        if (innerArg == "A")
-          return new Arg(ArgType.RefA, 0);
-        if (innerArg == "N")
-          return new Arg(ArgType.RefN, 0);
-        int addr;
-        if (int.TryParse(innerArg, out addr)) {
-          return new Arg(ArgType.RefMem, addr);
-        }
+        innerArg = arg.Replace("[", "").Replace("]", "");
+        indirect = true;
       } else {
-        int value;
-        if (int.TryParse(arg, out value)) {
-          return new Arg(ArgType.Value, value);
-        }
+        innerArg = arg;
+        indirect = false;
       }
+      if (innerArg == "A")
+        return new Arg(ArgType.RefA, 0, indirect);
+      if (innerArg == "N")
+        return new Arg(ArgType.RefN, 0, indirect);
+      int addr;
+      if (int.TryParse(innerArg, out addr))
+        return new Arg(ArgType.Value, addr, indirect);
       throw new Exception(string.Format("Could not parse arg \"{0}\"", arg));
     }
   }
