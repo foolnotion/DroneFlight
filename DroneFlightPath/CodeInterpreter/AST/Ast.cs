@@ -2,8 +2,8 @@
 
 namespace CodeInterpreter.AST {
   public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp }
-  public enum AstUnaryOp { Negate, Increment, Decrement }
-  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte }
+  public enum AstUnaryOp { Negate, Increment, Decrement, Length }
+  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxSet,IdxGet }
 
   public class Ast {
     private Ast() { }

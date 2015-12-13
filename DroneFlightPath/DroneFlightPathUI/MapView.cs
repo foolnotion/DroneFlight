@@ -24,7 +24,7 @@ namespace DroneFlightPathUI {
       {ObjectType.Citizen, Color.IndianRed}
     };
 
-    private const int SquareSize = 25;
+    private const int SquareSize = 15;
 
     private Map map;
     private BindingSource watchDataSource;

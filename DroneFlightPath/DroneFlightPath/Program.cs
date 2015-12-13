@@ -43,7 +43,7 @@ namespace DroneFlightPath {
       var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");
       Console.WriteLine($"Result: {rm.Memory[resultAddr]}");
-      //      Console.Read();
+      Console.Read();
     }
   }
 }

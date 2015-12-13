@@ -10,6 +10,7 @@ namespace CodeInterpreter.AST {
   // - Ast.Neg(Ast.Constant(3)) => Ast.Constant(-3)
   // - Ast.Add(Ast.Constant(1), Ast.Constant(2)) => Ast.Constant(3)
   // .. and so on
+
   public class SimplificationVisitor : AstNodeVisitor {
     public override void Visit(AstNode node) {
       throw new NotImplementedException();
@@ -41,6 +42,18 @@ namespace CodeInterpreter.AST {
         return addr;
       addr = Pointer++;
       objects[objectId] = addr;
+      return addr;
+    }
+
+    public int MapObject(string objectId, int size) {
+      if (objects == null)
+        objects = new Dictionary<string, int>();
+      int addr;
+      if (objects.TryGetValue(objectId, out addr))
+        return addr;
+      addr = Pointer++;
+      objects[objectId] = addr;
+      Pointer += (size - 1);
       return addr;
     }
 
@@ -82,10 +95,12 @@ namespace CodeInterpreter.AST {
       if (!leaf.IsLeaf)
         throw new ArgumentException($"Provided argument {leaf.Name} is not a leaf node.");
       switch (leaf.Type) {
-        case AstNodeType.Constant: {
+        case AstNodeType.Constant:
+          {
             return new Arg(ArgType.Value, ((ConstantAstNode)leaf).Value, indirect: false);
           }
-        case AstNodeType.Variable: {
+        case AstNodeType.Variable:
+          {
             var variableNode = (VariableAstNode)leaf;
             var addr = MemoryMap[variableNode.VariableName];
             return new Arg(ArgType.Value, addr, indirect: true);
@@ -102,18 +117,21 @@ namespace CodeInterpreter.AST {
       var count = Code.Count;
       jumpLocations[node.Id] = count + 1;
       switch (node.Type) {
-        case AstNodeType.StartNode: {
+        case AstNodeType.StartNode:
+          {
             Code.Add(new Instruction(OpCode.Hlt, new Arg(ArgType.Value, 0, indirect: false)));
             break;
           }
-        case AstNodeType.BinaryOp: {
+        case AstNodeType.BinaryOp:
+          {
             var binaryOpNode = (BinaryAstNode)node;
             var left = binaryOpNode.Left;
             var right = binaryOpNode.Right;
             var leftArg = left.IsLeaf ? LeafToArg(left) : new Arg(ArgType.Value, MemoryMap[left.Id], indirect: true);
             var rightArg = right.IsLeaf ? LeafToArg(right) : new Arg(ArgType.Value, MemoryMap[right.Id], indirect: true);
             switch (binaryOpNode.Op) {
-              case AstBinaryOp.Assign: {
+              case AstBinaryOp.Assign:
+                {
                   Code.AddRange(new[] {
                     Instruction.Lda(rightArg),
                     Instruction.Sta(leftArg),
@@ -121,7 +139,8 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Add: {
+              case AstBinaryOp.Add:
+                {
                   Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
@@ -129,13 +148,15 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Sub: {
+              case AstBinaryOp.Sub:
+                {
                   Code.Add(Instruction.Lda(leftArg));
                   Code.Add(Instruction.Suba(rightArg));
                   Code.Add(Instruction.Sta(new Arg(ArgType.Value, resultAddr, indirect: true)));
                   break;
                 }
-              case AstBinaryOp.Mul: {
+              case AstBinaryOp.Mul:
+                {
                   // mul is implemented as repeated addition
                   // a loop is used for incrementing the value at resultAddr
                   var tmpId = $"{binaryOpNode}_tmp";
@@ -165,7 +186,8 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Div: {
+              case AstBinaryOp.Div:
+                {
                   // div is implemented as repeated subtraction
                   // but the result will be given by the loop counter
                   // eg: for 2/2 the code will count how many times 2 can be subtracted from 2 with a >= 0 result
@@ -196,7 +218,8 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Mod: {
+              case AstBinaryOp.Mod:
+                {
                   // mod is implemented as repeated subtraction
                   // but the result will be given by the last result value before (result -= right) < 0
                   // eg: for 3/2 the code will count how many times 2 can be subtracted from 3 with a result >= 0
@@ -218,7 +241,8 @@ namespace CodeInterpreter.AST {
                 }
               case AstBinaryOp.Pow:
                 break;
-              case AstBinaryOp.Eq: {
+              case AstBinaryOp.Eq:
+                {
                   Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
@@ -239,7 +263,8 @@ namespace CodeInterpreter.AST {
                   });
                 }
                 break;
-              case AstBinaryOp.Neq: {
+              case AstBinaryOp.Neq:
+                {
                   // this operation should return the exact oposite values compared to Eq
                   var end = Arg.Val(count + 11);
                   Code.AddRange(new[] {
@@ -262,7 +287,8 @@ namespace CodeInterpreter.AST {
                 });
                 }
                 break;
-              case AstBinaryOp.Lt: {
+              case AstBinaryOp.Lt:
+                {
                   Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
@@ -275,7 +301,8 @@ namespace CodeInterpreter.AST {
                   });
                 }
                 break;
-              case AstBinaryOp.Gt: {
+              case AstBinaryOp.Gt:
+                {
                   Code.AddRange(new[] {
                   Instruction.Lda(rightArg),
                   Instruction.Suba(leftArg),
@@ -288,7 +315,8 @@ namespace CodeInterpreter.AST {
                   });
                 }
                 break;
-              case AstBinaryOp.Lte: {
+              case AstBinaryOp.Lte:
+                {
                   //                  int end = 6;
                   //                  Code.AddRange(new[] {
                   //                  Instruction.Lda(leftArg),
@@ -305,6 +333,32 @@ namespace CodeInterpreter.AST {
                 break;
               case AstBinaryOp.Gte:
                 break;
+              case AstBinaryOp.IdxGet:
+                {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Adda(rightArg),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(resultAddrArg),
+                    Instruction.Ldn(resultAddrArg),
+                    Instruction.Lda(Arg.N(true)),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+              case AstBinaryOp.IdxSet:
+                {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Adda(rightArg),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(resultAddrArg),
+                    Instruction.Ldn(resultAddrArg),
+                    Instruction.Lda(Arg.Mem(1084)), 
+                    Instruction.Sta(Arg.N(true))
+                  });
+                  break;
+                }
               default:
                 throw new Exception("Unknown binary op.");
             }
