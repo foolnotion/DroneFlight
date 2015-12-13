@@ -1,13 +1,6 @@
 ﻿using System.Collections.Generic;
 
 namespace CodeInterpreter {
-  public class RPMPrimitive { }
-
-  public class RPMVariable {
-    public string Name;
-    public int Value;
-  }
-
   public class RegisterMachineProgram {
     private static int VarMemStart = 1000;
     private static int VarMemEnd = 2000;

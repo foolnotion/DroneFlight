@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AST\Ast.cs" />
+    <Compile Include="AST\AstNodeVisitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterMachine.cs" />
     <Compile Include="RegisterMachineProgram.cs" />

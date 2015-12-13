@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using CodeInterpreter;
+using CodeInterpreter.AST;
 
 namespace DroneFlightPath {
   class Program {
@@ -16,48 +15,31 @@ namespace DroneFlightPath {
     };
 
     static void Main(string[] args) {
-      var nl = Environment.NewLine;
-      var srcPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\TestFile\06_beOnYourToes_Generated.txt"));
-      //      var moveInstructions = new[] {
-      //        new MapUtil.MoveInstr(Direction.Right, 9),
-      //        new MapUtil.MoveInstr(Direction.Down, 2),
-      //        new MapUtil.MoveInstr(Direction.Hold, 4),
-      //        new MapUtil.MoveInstr(Direction.Down, 9),
-      //        new MapUtil.MoveInstr(Direction.Hold, 5),
-      //        new MapUtil.MoveInstr(Direction.Down, 2),
-      //        new MapUtil.MoveInstr(Direction.Right, 5),
-      //        new MapUtil.MoveInstr(Direction.Up, 2),
-      //      };
-      //      var steps = moveInstructions.Sum(x => x.S);
-      //      var code = MapUtil.GenerateMachineCode(moveInstructions).ToArray();
-      var code = RegisterMachineUtil.LoadPath(srcPath).ToArray();
       var sb = new StringBuilder();
-      foreach (var instr in code) {
-        sb.AppendLine(instr.ToString());
+      var rm = new RegisterMachine();
+      //      var binaryOp = new BinaryOperationAstNode(
+      //        AstBinaryOp.Add,
+      //        new BinaryOperationAstNode(AstBinaryOp.Mul, new ConstantAstNode(2), new VariableAstNode("a", 3)),
+      //        new ConstantAstNode(4));
+      var binaryOp = new BinaryOperationAstNode(AstBinaryOp.Mul, new ConstantAstNode(3), new VariableAstNode("a", 5));
+      var startNode = new AstStartNode { Child = binaryOp };
+      var mmapVisitor = new MapSymbolsToMemoryVisitor();
+      startNode.Accept(mmapVisitor);
+      var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemMap);
+      startNode.Accept(genVisitor);
+
+      sb.Clear();
+      for (int i = 0; i < genVisitor.Code.Count; ++i) {
+        sb.AppendLine($"{i}: {genVisitor.Code[i]}");
       }
-      File.WriteAllText(srcPath, sb.ToString());
+      Console.WriteLine("Generated ASM:");
+      Console.WriteLine(sb);
 
-      var sm = new RegisterMachine();
-      sm.LoadIntructions(code);
-
-      var steps = 37;
-      const double mapWeight = 0.06;
-      for (int i = 0; i < steps; ++i) {
-        try {
-          sm.Run();
-          Console.WriteLine("A: {0}, N: {1}, M[0]: {2}, M[1000]: {3}, M[1001]: {4}",
-            sm.A, sm.N, int2Dir[sm.Memory[0]], sm.Memory[1000], sm.Memory[1001]);
-        }
-        catch (Exception e) {
-          Console.WriteLine($"Error running code: {e.Message}");
-        }
-      }
-      Console.WriteLine("Cpu cycles: {0}", sm.Cycles);
-
-      var score = mapWeight * 1e6 / Math.Log(steps * steps * sm.Cycles);
-
-      Console.WriteLine("Score: {0:0.00}", score);
-
+      rm.LoadIntructions(genVisitor.Code.ToArray());
+      rm.Run();
+      var resultAddr = genVisitor.IntermediateResults[binaryOp.Id];
+      Console.WriteLine($"Result addr: {resultAddr}");
+      Console.WriteLine($"Result: {rm.Memory[resultAddr]}");
       //      Console.Read();
     }
   }
