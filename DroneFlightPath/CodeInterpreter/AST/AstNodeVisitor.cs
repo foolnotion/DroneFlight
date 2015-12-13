@@ -54,7 +54,7 @@ namespace CodeInterpreter.AST {
         return addr;
       addr = Pointer++;
       objects[objectId] = addr;
-      Pointer += (size - 1);
+      Pointer += size;
       return addr;
     }
 
@@ -121,6 +121,12 @@ namespace CodeInterpreter.AST {
 
       var code = new List<Instruction>();
       switch (node.Type) {
+        case AstNodeType.Array: {
+            var arrayNode = (ArrayAstNode)node;
+            code.Add(Instruction.Lda(Arg.Val(arrayNode.Size)));
+            code.Add(Instruction.Sta(resultAddrArg));
+            break;
+          }
         case AstNodeType.StartNode: {
             code.Add(Instruction.Hlt());
             break;
@@ -307,9 +313,7 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-
               case AstBinaryOp.IdxGet: {
-
                   code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
@@ -321,10 +325,7 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-
-
               case AstBinaryOp.Lte: {
-
                   throw new NotImplementedException();
                 }
               case AstBinaryOp.Gte: {
@@ -341,10 +342,7 @@ namespace CodeInterpreter.AST {
             var conditionalNode = (ConditionalAstNode)node;
             conditionalNode.TrueBranch.Accept(childVisitor);
             var trueBranchCode = childVisitor.Code.ToList();
-
-
             var conditionArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.Condition.Id));
-
             switch (conditionalNode.Op) {
               case AstConditionalOp.IfThen: {
                   Code.AddRange(new[] {
@@ -376,31 +374,78 @@ namespace CodeInterpreter.AST {
                   Code.AddRange(falseBranchCode);
                   break;
                 }
-              case AstConditionalOp.IdxSet: {
-                  var trueArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.TrueBranch.Id));
-                  var falseArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.FalseBranch.Id));
-                  code.AddRange(new[] {
-                    Instruction.Lda(conditionArg),
-                    Instruction.Adda(trueArg),
-                    Instruction.Adda(Arg.Val(1)),
-                    Instruction.Sta(resultAddrArg),
-                    Instruction.Ldn(resultAddrArg),
-                    Instruction.Lda(falseArg),
-                    Instruction.Sta(Arg.N(true))
-                  });
-                  break;
-                }
               default:
                 throw new Exception("Unknown conditional Op.");
             }
             break;
           }
-        case AstNodeType.UnaryOp:
+        case AstNodeType.Loop: {
+            var childVisitor = new GenerateAsmVisitor(MemoryMap);
+            var loopNode = (LoopAstNode)node;
+            loopNode.Body.Accept(childVisitor);
+            var loopBodyCode = childVisitor.Code.ToList();
+            var conditionArg = Arg.Mem(MemoryMap.MapObject(loopNode.Condition.Id));
+            switch (loopNode.LoopType) {
+              case AstLoopType.While: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(count + 4)),
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 4 + loopBodyCode.Count + 2)),
+                  });
+                  Code.AddRange(loopBodyCode);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(jumpLocations[loopNode.Condition.Id]))
+                  });
+                  break;
+                }
+              case AstLoopType.DoWhile: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 2)),
+                  });
+                  Code.AddRange(loopBodyCode);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(jumpLocations[loopNode.Condition.Id]))
+                  });
+                  break;
+                }
+              default:
+                throw new Exception("Unknown loop type.");
+            }
+            break;
+          }
+        case AstNodeType.UnaryOp: {
+            var unaryOpNode = (UnaryAstNode)node;
+            var unaryArg = unaryOpNode.Arg;
+            var unaryArgAddr = unaryArg.IsLeaf ? LeafToArg(unaryArg) : Arg.Mem(MemoryMap[unaryArg.Id]);
+            switch (unaryOpNode.Op) {
+              case AstUnaryOp.Increment: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(unaryArgAddr),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(unaryArgAddr),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+              case AstUnaryOp.Decrement: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(unaryArgAddr),
+                    Instruction.Suba(Arg.Val(1)),
+                    Instruction.Sta(unaryArgAddr),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+            }
+          }
           break;
         default:
           throw new Exception("Unknown AST node type.");
       }
-
       return code;
     }
 
@@ -408,7 +453,7 @@ namespace CodeInterpreter.AST {
       if (node.IsLeaf) return;
       var count = Code.Count;
       Code.AddRange(GenerateAsm(node));
-      jumpLocations[node.Id] = count + 1;
+      jumpLocations[node.Id] = count;
     }
   }
 }

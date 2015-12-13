@@ -1,12 +1,11 @@
 ﻿using System;
 
 namespace CodeInterpreter.AST {
-
   public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp, Loop, Conditional, Array }
   public enum AstUnaryOp { Negate, Increment, Decrement }
   public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxGet }
   public enum AstConditionalOp { IfThen, IfThenElse, IdxSet }
-
+  public enum AstLoopType { While, DoWhile }
 
   public class Ast {
     private Ast() { }
@@ -135,21 +134,29 @@ namespace CodeInterpreter.AST {
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
     }
-
     public static AstNode IdxSet(AstNode array, AstNode index, AstNode value) {
       return new ConditionalAstNode(AstConditionalOp.IdxSet, array, index, value);
     }
     public static AstNode IfThenElse(AstNode condition, AstNode trueBranch, AstNode falseBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThenElse, condition, trueBranch, falseBranch);
-
+    }
+    public static AstNode While(AstNode condition, AstNode body) {
+      return new LoopAstNode(AstLoopType.While, condition, body);
+    }
+    public static AstNode DoWhile(AstNode condition, AstNode body) {
+      return new LoopAstNode(AstLoopType.DoWhile, condition, body);
     }
     public static AstNode Neg(AstNode arg) {
       return new UnaryAstNode(AstUnaryOp.Negate, arg);
     }
     public static AstNode Increment(AstNode arg) {
+      if (arg.Type != AstNodeType.Variable)
+        throw new ArgumentException("Increment operations can only be applied to variables.");
       return new UnaryAstNode(AstUnaryOp.Increment, arg);
     }
     public static AstNode Decrement(AstNode arg) {
+      if (arg.Type != AstNodeType.Variable)
+        throw new ArgumentException("Decrement operations can only be applied to variables.");
       return new UnaryAstNode(AstUnaryOp.Decrement, arg);
     }
     #endregion
@@ -251,7 +258,7 @@ namespace CodeInterpreter.AST {
     public AstNode TrueBranch { get; }
     public AstNode FalseBranch { get; }
 
-    public ConditionalAstNode(AstConditionalOp op, AstNode condition, AstNode trueBranch, AstNode falseBranch)
+    internal ConditionalAstNode(AstConditionalOp op, AstNode condition, AstNode trueBranch, AstNode falseBranch)
       : base(AstNodeType.Conditional, "ConditionalAstNode", false) {
       Op = op;
       Condition = condition;
@@ -264,17 +271,20 @@ namespace CodeInterpreter.AST {
     }
   }
 
+  // execute body as long as condition is true
   public class LoopAstNode : AstNode {
+    public AstLoopType LoopType { get; }
     public AstNode Condition { get; }
     public AstNode Body { get; }
 
-    public LoopAstNode(AstNode condition, AstNode body) : base(AstNodeType.Loop, "LoopAstNode", false) {
+    internal LoopAstNode(AstLoopType loopType, AstNode condition, AstNode body) : base(AstNodeType.Loop, "LoopAstNode", false) {
       Condition = condition;
       Body = body;
+      LoopType = loopType;
     }
     public override void Accept(AstNodeVisitor visitor) {
       Condition.Accept(visitor);
-      Body.Accept(visitor);
+      //      Body.Accept(visitor);
       visitor.Visit(this);
     }
   }

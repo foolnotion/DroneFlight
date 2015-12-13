@@ -28,8 +28,13 @@ namespace DroneFlightPath {
       var one = AstNode.Constant(1);
       var two = AstNode.Constant(2);
 
+      var startNode = new AstStartNode(
+        AstNode.Assign(a, AstNode.Constant(2)),
+        //        AstNode.Assign(b, AstNode.Constant(10)),
+        AstNode.DoWhile(a < AstNode.Constant(10), AstNode.Assign(a, a + AstNode.Constant(1))),
+        AstNode.Assign(result, a)
+      );
 
-      var startNode = new AstStartNode(AstNode.IfThenElse(one > two, AstNode.Assign(result, AstNode.Constant(123)), AstNode.Assign(result, AstNode.Constant(456))));
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
