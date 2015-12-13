@@ -1,9 +1,12 @@
 ﻿using System;
 
 namespace CodeInterpreter.AST {
-  public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp }
-  public enum AstUnaryOp { Negate, Increment, Decrement, Length }
-  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxSet,IdxGet }
+
+  public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp, Loop, Conditional }
+  public enum AstUnaryOp { Negate, Increment, Decrement }
+  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxSet, IdxGet }
+  public enum AstConditionalOp { IfThen, IfThenElse }
+
 
   public class Ast {
     private Ast() { }
@@ -123,6 +126,9 @@ namespace CodeInterpreter.AST {
     public static AstNode Gte(AstNode left, AstNode right) {
       return new BinaryAstNode(AstBinaryOp.Gte, left, right);
     }
+    public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
+      return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
+    }
     public static AstNode Neg(AstNode arg) {
       return new UnaryAstNode(AstUnaryOp.Negate, arg);
     }
@@ -206,6 +212,43 @@ namespace CodeInterpreter.AST {
     }
     public override string ToString() {
       return $"Binary op: ({Op} {Left} {Right})";
+    }
+  }
+
+  public class ConditionalAstNode : AstNode {
+    public AstConditionalOp Op { get; }
+    public AstNode Condition { get; }
+    public AstNode TrueBranch { get; }
+    public AstNode FalseBranch { get; }
+
+    public ConditionalAstNode(AstConditionalOp op, AstNode condition, AstNode trueBranch, AstNode falseBranch)
+      : base(AstNodeType.Conditional, "ConditionalAstNode", false) {
+      Op = op;
+      Condition = condition;
+      TrueBranch = trueBranch;
+      FalseBranch = falseBranch;
+    }
+    public override void Accept(AstNodeVisitor visitor) {
+      //      TrueBranch.Accept(visitor);
+      //      if (Op == AstConditionalOp.IfThenElse)
+      //        FalseBranch.Accept(visitor);
+      Condition.Accept(visitor);
+      visitor.Visit(this);
+    }
+  }
+
+  public class LoopAstNode : AstNode {
+    public AstNode Condition { get; }
+    public AstNode Body { get; }
+
+    public LoopAstNode(AstNode condition, AstNode body) : base(AstNodeType.Loop, "LoopAstNode", false) {
+      Condition = condition;
+      Body = body;
+    }
+    public override void Accept(AstNodeVisitor visitor) {
+      Condition.Accept(visitor);
+      Body.Accept(visitor);
+      visitor.Visit(this);
     }
   }
 }

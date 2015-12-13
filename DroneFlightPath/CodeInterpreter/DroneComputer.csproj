@@ -47,7 +47,6 @@
     <Compile Include="AST\AstNodeVisitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisterMachine.cs" />
-    <Compile Include="RegisterMachineProgram.cs" />
     <Compile Include="RegisterMachineUtil.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
