@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace CodeInterpreter {
@@ -35,6 +36,19 @@ namespace CodeInterpreter {
       }
       return Indirect ? $"[{label}]" : label;
     }
+
+    public static Arg Val(int value) {
+      return new Arg(ArgType.Value, value, false);
+    }
+    public static Arg Mem(int addr) {
+      return new Arg(ArgType.Value, addr, true);
+    }
+    public static Arg A(bool indirect) {
+      return new Arg(ArgType.RefA, 0, indirect);
+    }
+    public static Arg N(bool indirect) {
+      return new Arg(ArgType.RefN, 0, indirect);
+    }
   }
 
   public class Instruction {
@@ -48,6 +62,29 @@ namespace CodeInterpreter {
       Arg = arg;
     }
 
+    public static Instruction Lda(Arg arg) {
+      return new Instruction(OpCode.Lda, arg);
+    }
+    public static Instruction Ldn(Arg arg) {
+      return new Instruction(OpCode.Ldn, arg);
+    }
+    public static Instruction Sta(Arg arg) {
+      if (!arg.Indirect)
+        throw new ArgumentException("The STA instruction accepts a memory address");
+      return new Instruction(OpCode.Sta, arg);
+    }
+    public static Instruction Adda(Arg arg) {
+      return new Instruction(OpCode.Adda, arg);
+    }
+    public static Instruction Suba(Arg arg) {
+      return new Instruction(OpCode.Suba, arg);
+    }
+    public static Instruction Jge(Arg arg) {
+      return new Instruction(OpCode.Jge, arg);
+    }
+    public static Instruction Hlt() {
+      return new Instruction(OpCode.Hlt, new Arg(ArgType.Value, 0, false));
+    }
     public override string ToString() {
       switch (OpCode) {
         case OpCode.Lda: {
@@ -79,9 +116,9 @@ namespace CodeInterpreter {
 
   public class RegisterMachineState {
     private RegisterMachineState() { }
-    private readonly Instruction[] code;
+    private readonly IList<Instruction> code;
 
-    public RegisterMachineState(Instruction[] instructions) {
+    public RegisterMachineState(IList<Instruction> instructions) {
       InstructionPointer = 0;
       this.code = instructions;
     }
@@ -127,7 +164,7 @@ namespace CodeInterpreter {
       Memory = new int[memoryCapacity];
     }
 
-    public void LoadIntructions(Instruction[] instructions) {
+    public void LoadIntructions(IList<Instruction> instructions) {
       state = new RegisterMachineState(instructions);
     }
 

@@ -6,127 +6,315 @@ namespace CodeInterpreter.AST {
     public abstract void Visit(AstNode node);
   }
 
-  public class MapSymbolsToMemoryVisitor : AstNodeVisitor {
-    private uint memStart = 1000;
-    private uint memEnd = 2000;
-    private uint memPointer;
-    public Dictionary<string, uint> MemMap { get; }
+  // tries to simplify the tree, eg:
+  // - Ast.Neg(Ast.Constant(3)) => Ast.Constant(-3)
+  // - Ast.Add(Ast.Constant(1), Ast.Constant(2)) => Ast.Constant(3)
+  // .. and so on
+  public class SimplificationVisitor : AstNodeVisitor {
+    public override void Visit(AstNode node) {
+      throw new NotImplementedException();
+    }
+  }
 
-    public MapSymbolsToMemoryVisitor() {
-      MemMap = new Dictionary<string, uint>();
-      memPointer = memStart;
+  public class MemoryMap {
+    public int Start { get; } = 1000;
+    public int End { get; } = 10000;
+    public int Pointer { get; private set; }
+
+    private Dictionary<string, int> objects;
+
+    private MemoryMap() { }
+
+    public MemoryMap(int start, int end) {
+      if (!(start < end))
+        throw new ArgumentException("Invalid memory limits.");
+      Start = start;
+      End = end;
+      Pointer = Start;
     }
 
-    public MapSymbolsToMemoryVisitor(uint memStart, uint memEnd) : this() {
-      if (!(memStart > memEnd))
-        throw new ArgumentException($"Invalid memory limits.");
-      this.memStart = memStart;
-      this.memEnd = memEnd;
-      memPointer = memStart;
+    public int MapObject(string objectId) {
+      if (objects == null)
+        objects = new Dictionary<string, int>();
+      int addr;
+      if (objects.TryGetValue(objectId, out addr))
+        return addr;
+      addr = Pointer++;
+      objects[objectId] = addr;
+      return addr;
+    }
+
+    public int this[string name] {
+      get { return objects[name]; }
+    }
+  }
+
+  public class MapObjectsToMemoryVisitor : AstNodeVisitor {
+    public MemoryMap MemoryMap { get; }
+
+    public MapObjectsToMemoryVisitor() {
+      MemoryMap = new MemoryMap(1000, 10000);
     }
 
     public override void Visit(AstNode node) {
-      var variableNode = node as VariableAstNode;
-      if (variableNode == null) return;
-      MemMap[variableNode.VariableName] = memPointer++;
+      if (node.Type == AstNodeType.Constant)
+        return;
+      var variable = node as VariableAstNode;
+      var id = variable == null ? node.Id : variable.VariableName;
+      MemoryMap.MapObject(id);
     }
   }
 
   public class GenerateAsmVisitor : AstNodeVisitor {
     private Dictionary<string, int> jumpLocations;
-    private Dictionary<string, uint> memoryMap;
     public List<Instruction> Code { get; private set; }
-    public Dictionary<string, int> IntermediateResults; // stores the memory addresses of intermediate results
-    private int intermediateResultsPointer = 2000;
+    public MemoryMap MemoryMap { get; private set; } // stores the memory addresses of intermediate results
 
     private GenerateAsmVisitor() { }
 
-    public GenerateAsmVisitor(Dictionary<string, uint> mmap) {
-      memoryMap = mmap;
+    public GenerateAsmVisitor(MemoryMap mmap) {
+      MemoryMap = mmap;
       jumpLocations = new Dictionary<string, int>();
       Code = new List<Instruction>();
-      IntermediateResults = new Dictionary<string, int>();
     }
 
-    private int MapResult(string resultName) {
-      int addr;
-      if (IntermediateResults.TryGetValue(resultName, out addr))
-        return addr;
-      addr = intermediateResultsPointer;
-      IntermediateResults[resultName] = addr;
-      intermediateResultsPointer++;
-      return addr;
-    }
-
-    private void UnmapResult(string resultName) {
-      // do something without fragmenting the result memory section
+    private Arg LeafToArg(AstNode leaf) {
+      if (!leaf.IsLeaf)
+        throw new ArgumentException($"Provided argument {leaf.Name} is not a leaf node.");
+      switch (leaf.Type) {
+        case AstNodeType.Constant: {
+            return new Arg(ArgType.Value, ((ConstantAstNode)leaf).Value, indirect: false);
+          }
+        case AstNodeType.Variable: {
+            var variableNode = (VariableAstNode)leaf;
+            var addr = MemoryMap[variableNode.VariableName];
+            return new Arg(ArgType.Value, addr, indirect: true);
+          }
+        default:
+          throw new ArgumentException("Unknown leaf node type.");
+      }
     }
 
     public override void Visit(AstNode node) {
-      if (node.Type == AstNodeType.Constant) return;
-      var resultAddr = MapResult(node.Id);
+      if (node.IsLeaf) return;
+      var resultAddr = MemoryMap[node.Id];
+      var resultAddrArg = Arg.Mem(resultAddr);
+      var count = Code.Count;
+      jumpLocations[node.Id] = count + 1;
       switch (node.Type) {
         case AstNodeType.StartNode: {
             Code.Add(new Instruction(OpCode.Hlt, new Arg(ArgType.Value, 0, indirect: false)));
             break;
           }
-        case AstNodeType.Variable: {
-            var variableNode = (VariableAstNode)node;
-            Code.Add(new Instruction(OpCode.Lda, new Arg(ArgType.Value, variableNode.Value, false)));
-            Code.Add(new Instruction(OpCode.Sta, new Arg(ArgType.Value, MapResult(node.Id), indirect: true)));
-            break;
-          }
         case AstNodeType.BinaryOp: {
-            var binaryOpNode = (BinaryOperationAstNode)node;
+            var binaryOpNode = (BinaryAstNode)node;
             var left = binaryOpNode.Left;
             var right = binaryOpNode.Right;
-            var leftArg = left.Type == AstNodeType.Constant ? new Arg(ArgType.Value, ((ConstantAstNode)left).Value, false) : new Arg(ArgType.Value, MapResult(left.Id), indirect: true);
-            var rightArg = right.Type == AstNodeType.Constant ? new Arg(ArgType.Value, ((ConstantAstNode)right).Value, false) : new Arg(ArgType.Value, MapResult(right.Id), indirect: true);
+            var leftArg = left.IsLeaf ? LeafToArg(left) : new Arg(ArgType.Value, MemoryMap[left.Id], indirect: true);
+            var rightArg = right.IsLeaf ? LeafToArg(right) : new Arg(ArgType.Value, MemoryMap[right.Id], indirect: true);
             switch (binaryOpNode.Op) {
+              case AstBinaryOp.Assign: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(rightArg),
+                    Instruction.Sta(leftArg),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
               case AstBinaryOp.Add: {
-                  Code.Add(new Instruction(OpCode.Lda, leftArg));
-                  Code.Add(new Instruction(OpCode.Adda, rightArg));
-                  Code.Add(new Instruction(OpCode.Sta, new Arg(ArgType.Value, resultAddr, indirect: true)));
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Adda(rightArg),
+                    Instruction.Sta(resultAddrArg)
+                  });
                   break;
                 }
               case AstBinaryOp.Sub: {
-                  Code.Add(new Instruction(OpCode.Lda, leftArg));
-                  Code.Add(new Instruction(OpCode.Suba, rightArg));
-                  Code.Add(new Instruction(OpCode.Sta, new Arg(ArgType.Value, resultAddr, indirect: true)));
+                  Code.Add(Instruction.Lda(leftArg));
+                  Code.Add(Instruction.Suba(rightArg));
+                  Code.Add(Instruction.Sta(new Arg(ArgType.Value, resultAddr, indirect: true)));
                   break;
                 }
               case AstBinaryOp.Mul: {
-                  var resultAddrArg = new Arg(ArgType.Value, resultAddr, indirect: true);
-                  var tmpAddrArg = new Arg(ArgType.Value, MapResult($"{binaryOpNode}_tmp"), indirect: true);
-                  var count = Code.Count;
-                  Code.Add(new Instruction(OpCode.Lda, new Arg(ArgType.Value, 0, indirect: false)));
-                  Code.Add(new Instruction(OpCode.Sta, resultAddrArg));
-                  Code.Add(new Instruction(OpCode.Lda, tmpAddrArg));
-                  Code.Add(new Instruction(OpCode.Suba, leftArg));
-                  Code.Add(new Instruction(OpCode.Jge, new Arg(ArgType.Value, count + 12, indirect: false)));
-                  Code.Add(new Instruction(OpCode.Lda, resultAddrArg));
-                  Code.Add(new Instruction(OpCode.Adda, rightArg));
-                  Code.Add(new Instruction(OpCode.Sta, resultAddrArg));
-                  Code.Add(new Instruction(OpCode.Lda, tmpAddrArg));
-                  Code.Add(new Instruction(OpCode.Adda, new Arg(ArgType.Value, 1, indirect: false)));
-                  Code.Add(new Instruction(OpCode.Sta, tmpAddrArg));
-                  Code.Add(new Instruction(OpCode.Jge, new Arg(ArgType.Value, count + 2, indirect: false)));
-                  // clean up memory at tmpAddr
-                  Code.Add(new Instruction(OpCode.Lda, new Arg(ArgType.Value, 0, indirect: false)));
-                  Code.Add(new Instruction(OpCode.Sta, tmpAddrArg));
+                  // mul is implemented as repeated addition
+                  // a loop is used for incrementing the value at resultAddr
+                  var tmpId = $"{binaryOpNode}_tmp";
+                  var tmpAddrArg = Arg.Mem(MemoryMap.MapObject(tmpId));
+                  Code.AddRange(new[] {
+                    // store 0 in the result
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Sta(resultAddrArg),
+                    // load tmp and subtract left (loop will run left times)
+                    Instruction.Lda(tmpAddrArg),
+                    Instruction.Suba(leftArg),
+                    // branch: when tmpAddrArg == left, jump out
+                    Instruction.Jge(Arg.Val(count + 12)),
+                    // else add right to result and increment loop variable
+                    Instruction.Lda(resultAddrArg),
+                    Instruction.Adda(rightArg),
+                    Instruction.Sta(resultAddrArg),
+                    // increment loop variable
+                    Instruction.Lda(tmpAddrArg),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(tmpAddrArg),
+                    // jump to loop start
+                    Instruction.Jge(Arg.Val(count + 2)),
+                    // clean up memory at tmpAddr
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Sta(tmpAddrArg),
+                  });
                   break;
                 }
+              case AstBinaryOp.Div: {
+                  // div is implemented as repeated subtraction
+                  // but the result will be given by the loop counter
+                  // eg: for 2/2 the code will count how many times 2 can be subtracted from 2 with a >= 0 result
+                  var tmpId = $"{binaryOpNode}_tmp";
+                  var tmpAddrArg = new Arg(ArgType.Value, MemoryMap.MapObject(tmpId), indirect: true); // address for the counter (value will be initially zero)
+                  Code.AddRange(new[] {
+                    // initialize result value with left
+                    Instruction.Lda(leftArg),
+                    Instruction.Sta(resultAddrArg),
+                    // loop: result = result - right
+                    Instruction.Lda(resultAddrArg),
+                    Instruction.Suba(rightArg),
+                    Instruction.Sta(resultAddrArg),
+                    // if result >= 0, increment counter, else we are done
+                    Instruction.Jge(Arg.Val(count + 9)),
+                    Instruction.Lda(tmpAddrArg), // load counter value
+                    Instruction.Sta(resultAddrArg), // write to result
+                    Instruction.Jge(Arg.Val(count + 13)), // jump away
+                    // increment counter
+                    Instruction.Lda(tmpAddrArg),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(tmpAddrArg),
+                    // go back to loop start
+                    Instruction.Jge(Arg.Val(count + 2)),
+                    // clean up tmpAddr
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Sta(tmpAddrArg)
+                  });
+                  break;
+                }
+              case AstBinaryOp.Mod: {
+                  // mod is implemented as repeated subtraction
+                  // but the result will be given by the last result value before (result -= right) < 0
+                  // eg: for 3/2 the code will count how many times 2 can be subtracted from 3 with a result >= 0
+                  var tmpId = $"{binaryOpNode}_tmp";
+                  var tmpAddrArg = new Arg(ArgType.Value, MemoryMap.MapObject(tmpId), indirect: true); // address for the counter (value will be initially zero)
+                  Code.AddRange(new[] {
+                    // initialize result value with left
+                    Instruction.Lda(leftArg),
+                    Instruction.Sta(tmpAddrArg),
+                    // loop: result = result - right
+                    Instruction.Lda(tmpAddrArg),
+                    Instruction.Sta(resultAddrArg),
+                    Instruction.Suba(rightArg),
+                    Instruction.Sta(tmpAddrArg),
+                    Instruction.Jge(Arg.Val(count+2)),
+                    // if A < 0, we are done, result contains the right value
+                  });
+                  break;
+                }
+              case AstBinaryOp.Pow:
+                break;
+              case AstBinaryOp.Eq: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Suba(rightArg),
+                    // if left >= right, jump to the next test
+                    Instruction.Jge(Arg.Val(count + 7)),
+                    // if A < 0, return
+                    Instruction.Lda(Arg.Val(-1)),
+                    Instruction.Sta(resultAddrArg),
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 11)),
+                    // test right < left
+                    Instruction.Lda(rightArg),
+                    Instruction.Suba(leftArg),
+                    // at this point A can only be 0 (left = right) or negative (left > right)
+                    Instruction.Jge(Arg.Val(count + 3)), // if its 0 return 0
+                    Instruction.Lda(Arg.Val(-1)),
+                    Instruction.Sta(resultAddrArg),
+                  });
+                }
+                break;
+              case AstBinaryOp.Neq: {
+                  // this operation should return the exact oposite values compared to Eq
+                  var end = Arg.Val(count + 11);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Suba(rightArg),
+                    // if left >= right, jump to the next test
+                    Instruction.Jge(Arg.Val(count + 5)),
+                    // if A < 0, return 0 (true)
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(end),
+                    // test right <= left
+                    Instruction.Lda(rightArg),
+                    Instruction.Suba(leftArg),
+                    // at this point A can only be 0 (left = right) or negative (left > right)
+                    Instruction.Jge(Arg.Val(count + 10)), // if its 0 return -1 (since they are equal)
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(end),
+                    Instruction.Lda(Arg.Val(-1)),
+                    Instruction.Sta(resultAddrArg),
+                });
+                }
+                break;
+              case AstBinaryOp.Lt: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(leftArg),
+                    Instruction.Suba(rightArg),
+                    // if left < right, return 0
+                    Instruction.Jge(Arg.Val(count + 5)),
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 6)),
+                    Instruction.Lda(Arg.Val(-1)),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                }
+                break;
+              case AstBinaryOp.Gt: {
+                  Code.AddRange(new[] {
+                  Instruction.Lda(rightArg),
+                  Instruction.Suba(leftArg),
+                  // if left < right, return 0
+                  Instruction.Jge(Arg.Val(count + 5)),
+                  Instruction.Lda(Arg.Val(0)),
+                  Instruction.Jge(Arg.Val(count + 6)),
+                  Instruction.Lda(Arg.Val(-1)),
+                  Instruction.Sta(resultAddrArg)
+                  });
+                }
+                break;
+              case AstBinaryOp.Lte: {
+                  //                  int end = 6;
+                  //                  Code.AddRange(new[] {
+                  //                  Instruction.Lda(leftArg),
+                  //                  Instruction.Suba(rightArg),
+                  //                  // if left < right, return 0
+                  //                  Instruction.Jge(Arg.Val(count + 5)),
+                  //                  Instruction.Lda(Arg.Val(0)),
+                  //                  Instruction.Jge(Arg.Val(count + end)),
+                  //                  Instruction.Lda(rightArg),
+                  //                  Instruction.Suba(leftArg),
+                  //                  Instruction.Sta(resultAddrArg)
+                  //                });
+                }
+                break;
+              case AstBinaryOp.Gte:
+                break;
               default:
                 throw new Exception("Unknown binary op.");
             }
             break;
           }
-        case AstNodeType.Condition:
+        case AstNodeType.UnaryOp:
           break;
         default:
           throw new Exception("Unknown AST node type.");
       }
-      jumpLocations[node.Id] = Code.Count - 1;
     }
   }
 }

@@ -17,15 +17,18 @@ namespace DroneFlightPath {
     static void Main(string[] args) {
       var sb = new StringBuilder();
       var rm = new RegisterMachine();
-      //      var binaryOp = new BinaryOperationAstNode(
-      //        AstBinaryOp.Add,
-      //        new BinaryOperationAstNode(AstBinaryOp.Mul, new ConstantAstNode(2), new VariableAstNode("a", 3)),
-      //        new ConstantAstNode(4));
-      var binaryOp = new BinaryOperationAstNode(AstBinaryOp.Mul, new ConstantAstNode(3), new VariableAstNode("a", 5));
-      var startNode = new AstStartNode { Child = binaryOp };
-      var mmapVisitor = new MapSymbolsToMemoryVisitor();
+
+      var a = AstNode.Variable("a");
+      var b = AstNode.Variable("b");
+      var result = AstNode.Variable("result");
+      var startNode = new AstStartNode(
+        AstNode.Assign(a, AstNode.Constant(2)),
+        AstNode.Assign(b, AstNode.Constant(3)),
+        AstNode.Assign(result, a < b)
+      );
+      var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
-      var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemMap);
+      var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
       startNode.Accept(genVisitor);
 
       sb.Clear();
@@ -35,9 +38,9 @@ namespace DroneFlightPath {
       Console.WriteLine("Generated ASM:");
       Console.WriteLine(sb);
 
-      rm.LoadIntructions(genVisitor.Code.ToArray());
+      rm.LoadIntructions(genVisitor.Code);
       rm.Run();
-      var resultAddr = genVisitor.IntermediateResults[binaryOp.Id];
+      var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");
       Console.WriteLine($"Result: {rm.Memory[resultAddr]}");
       //      Console.Read();
