@@ -139,6 +139,7 @@ namespace CodeInterpreter.AST {
     public static AstNode IdxSet(AstNode array, AstNode index, AstNode value) {
       return new ConditionalAstNode(AstConditionalOp.IdxSet, array, index, value);
     }
+
     public static AstNode IfThenElse(AstNode condition, AstNode trueBranch, AstNode falseBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThenElse, condition, trueBranch, falseBranch);
 

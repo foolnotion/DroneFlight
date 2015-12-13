@@ -124,6 +124,13 @@ namespace CodeInterpreter.AST {
 
       var code = new List<Instruction>();
       switch (node.Type) {
+        case AstNodeType.Array:
+          {
+            var arrayNode = (ArrayAstNode)node;
+            code.Add(Instruction.Lda(Arg.Val(arrayNode.Size)));
+            code.Add(Instruction.Sta(resultAddrArg));
+            break;
+          }
         case AstNodeType.StartNode:
           {
             code.Add(Instruction.Hlt());
