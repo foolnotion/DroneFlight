@@ -20,12 +20,13 @@ namespace DroneFlightPath {
 
       var a = AstNode.Variable("a");
       var b = AstNode.Variable("b");
+      var aa = AstNode.Assign(a, AstNode.Constant(1));
+      var ab = AstNode.Assign(b, AstNode.Constant(2));
       var result = AstNode.Variable("result");
-      var startNode = new AstStartNode(
-        AstNode.Assign(a, AstNode.Constant(2)),
-        AstNode.Assign(b, AstNode.Constant(3)),
-        AstNode.Assign(result, a < b)
+      var startNode = new AstStartNode(aa, ab, AstNode.IfThen(a > b, AstNode.Assign(result, AstNode.Constant(10)))
+      //     AstNode.IfThen(a < b, AstNode.Assign(result, AstNode.Constant(100)))
       );
+
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
@@ -40,6 +41,7 @@ namespace DroneFlightPath {
 
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
+
       var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");
       Console.WriteLine($"Result: {rm.Memory[resultAddr]}");
