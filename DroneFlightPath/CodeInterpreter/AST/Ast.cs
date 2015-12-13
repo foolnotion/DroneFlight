@@ -86,7 +86,7 @@ namespace CodeInterpreter.AST {
       return new VariableAstNode(name);
     }
     public static AstNode Array(string name, int size) {
-      return new ArrayAstNode(name,size);
+      return new ArrayAstNode(name, size);
     }
     public static AstNode Assign(AstNode left, AstNode right) {
       if (left.Type != AstNodeType.Variable)
@@ -135,8 +135,13 @@ namespace CodeInterpreter.AST {
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
     }
+
     public static AstNode IdxSet(AstNode array, AstNode index, AstNode value) {
       return new ConditionalAstNode(AstConditionalOp.IdxSet, array, index, value);
+    }
+    public static AstNode IfThenElse(AstNode condition, AstNode trueBranch, AstNode falseBranch) {
+      return new ConditionalAstNode(AstConditionalOp.IfThenElse, condition, trueBranch, falseBranch);
+
     }
     public static AstNode Neg(AstNode arg) {
       return new UnaryAstNode(AstUnaryOp.Negate, arg);
@@ -254,9 +259,6 @@ namespace CodeInterpreter.AST {
       FalseBranch = falseBranch;
     }
     public override void Accept(AstNodeVisitor visitor) {
-      //      TrueBranch.Accept(visitor);
-      //      if (Op == AstConditionalOp.IfThenElse)
-      //        FalseBranch.Accept(visitor);
       Condition.Accept(visitor);
       visitor.Visit(this);
     }

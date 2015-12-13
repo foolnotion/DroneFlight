@@ -24,10 +24,12 @@ namespace DroneFlightPath {
       var ab = AstNode.Assign(b, AstNode.Constant(2));
       var array = AstNode.Array("v", 30);
       var result = AstNode.Variable("result");
-      var startNode = new AstStartNode(aa, ab, array,AstNode.IdxGet(array, AstNode.Constant(2)) , AstNode.IfThen(a > b, AstNode.Assign(result, AstNode.Constant(10)))
-      //     AstNode.IfThen(a < b, AstNode.Assign(result, AstNode.Constant(100)))
-      );
 
+      var one = AstNode.Constant(1);
+      var two = AstNode.Constant(2);
+
+
+      var startNode = new AstStartNode(AstNode.IfThenElse(one > two, AstNode.Assign(result, AstNode.Constant(123)), AstNode.Assign(result, AstNode.Constant(456))));
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);

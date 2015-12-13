@@ -257,17 +257,15 @@ namespace CodeInterpreter.AST {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
                     // if left >= right, jump to the next test
-                    Instruction.Jge(Arg.Val(count + 7)),
+                    Instruction.Jge(Arg.Val(count + 5)),
                     // if A < 0, return
-                    Instruction.Lda(Arg.Val(-1)),
-                    Instruction.Sta(resultAddrArg),
                     Instruction.Lda(Arg.Val(0)),
-                    Instruction.Jge(Arg.Val(count + 11)),
+                    Instruction.Jge(Arg.Val(count + 8)),
                     // test right < left
                     Instruction.Lda(rightArg),
                     Instruction.Suba(leftArg),
                     // at this point A can only be 0 (left = right) or negative (left > right)
-                    Instruction.Jge(Arg.Val(count + 3)), // if its 0 return 0
+                    Instruction.Jge(Arg.Val(count + 9)), // if its 0 return 0
                     Instruction.Lda(Arg.Val(-1)),
                     Instruction.Sta(resultAddrArg),
                   });
@@ -325,8 +323,10 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
+
               case AstBinaryOp.IdxGet:
                 {
+
                   code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
@@ -339,8 +339,10 @@ namespace CodeInterpreter.AST {
                   break;
                 }
 
+
               case AstBinaryOp.Lte:
                 {
+
                   throw new NotImplementedException();
                 }
               case AstBinaryOp.Gte:
@@ -359,10 +361,10 @@ namespace CodeInterpreter.AST {
             var conditionalNode = (ConditionalAstNode)node;
             conditionalNode.TrueBranch.Accept(childVisitor);
             var trueBranchCode = childVisitor.Code.ToList();
-            
+
 
             var conditionArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.Condition.Id));
-           
+
             switch (conditionalNode.Op) {
               case AstConditionalOp.IfThen:
                 {
@@ -379,7 +381,21 @@ namespace CodeInterpreter.AST {
                 {
                   childVisitor.Code.Clear();
                   conditionalNode.FalseBranch.Accept(childVisitor);
-                  var falseBranchCodeSection = childVisitor.Code.ToList();
+                  var falseBranchCode = childVisitor.Code.ToList();
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(count + 4)),
+                    Instruction.Lda(Arg.Val(0)),
+                    // if condition false, jump over true branch code section
+                    Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2)),
+                  });
+                  Code.AddRange(trueBranchCode);
+                  // skip false branch section if condition true, at the end of the execution of the true branch code
+                  Code.AddRange(new[] {
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2 + falseBranchCode.Count)),
+                  });
+                  Code.AddRange(falseBranchCode);
                   break;
                 }
               case AstConditionalOp.IdxSet:
@@ -392,7 +408,7 @@ namespace CodeInterpreter.AST {
                     Instruction.Adda(Arg.Val(1)),
                     Instruction.Sta(resultAddrArg),
                     Instruction.Ldn(resultAddrArg),
-                    Instruction.Lda(falseArg), 
+                    Instruction.Lda(falseArg),
                     Instruction.Sta(Arg.N(true))
                   });
                   break;
