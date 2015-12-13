@@ -22,8 +22,9 @@ namespace DroneFlightPath {
       var b = AstNode.Variable("b");
       var aa = AstNode.Assign(a, AstNode.Constant(1));
       var ab = AstNode.Assign(b, AstNode.Constant(2));
+      var array = AstNode.Array("v", 30);
       var result = AstNode.Variable("result");
-      var startNode = new AstStartNode(aa, ab, AstNode.IfThen(a > b, AstNode.Assign(result, AstNode.Constant(10)))
+      var startNode = new AstStartNode(aa, ab, array,AstNode.IdxGet(array, AstNode.Constant(2)) , AstNode.IfThen(a > b, AstNode.Assign(result, AstNode.Constant(10)))
       //     AstNode.IfThen(a < b, AstNode.Assign(result, AstNode.Constant(100)))
       );
 

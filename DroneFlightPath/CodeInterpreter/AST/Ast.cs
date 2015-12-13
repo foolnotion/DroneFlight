@@ -2,10 +2,10 @@
 
 namespace CodeInterpreter.AST {
 
-  public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp, Loop, Conditional }
+  public enum AstNodeType { StartNode, Constant, Variable, BinaryOp, UnaryOp, Loop, Conditional, Array }
   public enum AstUnaryOp { Negate, Increment, Decrement }
-  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxSet, IdxGet }
-  public enum AstConditionalOp { IfThen, IfThenElse }
+  public enum AstBinaryOp { Assign, Add, Sub, Mul, Div, Mod, Pow, Eq, Neq, Lt, Lte, Gt, Gte, IdxGet }
+  public enum AstConditionalOp { IfThen, IfThenElse, IdxSet }
 
 
   public class Ast {
@@ -85,6 +85,9 @@ namespace CodeInterpreter.AST {
     public static AstNode Variable(string name) {
       return new VariableAstNode(name);
     }
+    public static AstNode Array(string name, int size) {
+      return new ArrayAstNode(name,size);
+    }
     public static AstNode Assign(AstNode left, AstNode right) {
       if (left.Type != AstNodeType.Variable)
         throw new ArgumentException("Assignment target should be a variable.");
@@ -126,8 +129,14 @@ namespace CodeInterpreter.AST {
     public static AstNode Gte(AstNode left, AstNode right) {
       return new BinaryAstNode(AstBinaryOp.Gte, left, right);
     }
+    public static AstNode IdxGet(AstNode array, AstNode index) {
+      return new BinaryAstNode(AstBinaryOp.IdxGet, array, index);
+    }
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
+    }
+    public static AstNode IdxSet(AstNode array, AstNode index, AstNode value) {
+      return new ConditionalAstNode(AstConditionalOp.IdxSet, array, index, value);
     }
     public static AstNode Neg(AstNode arg) {
       return new UnaryAstNode(AstUnaryOp.Negate, arg);
@@ -178,6 +187,22 @@ namespace CodeInterpreter.AST {
     }
     public override string ToString() {
       return $"Var: {VariableName}";
+    }
+  }
+
+  public class ArrayAstNode : AstNode {
+    public string VariableName { get; }
+    public int Size { get; }
+
+    internal ArrayAstNode(string variableName, int size) : base(AstNodeType.Array, "ArrayAstNode", true) {
+      VariableName = variableName;
+      Size = size;
+    }
+    public override void Accept(AstNodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+    public override string ToString() {
+      return $"Array: {VariableName}";
     }
   }
 
