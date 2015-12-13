@@ -99,8 +99,7 @@ namespace CodeInterpreter.AST {
         case AstNodeType.Constant: {
             return Arg.Val(((ConstantAstNode)leaf).Value);
           }
-        case AstNodeType.Variable:
-          {
+        case AstNodeType.Variable: {
             var variableNode = (VariableAstNode)leaf;
             var addr = MemoryMap.MapObject(variableNode.VariableName);
             return Arg.Mem(addr);
@@ -121,8 +120,7 @@ namespace CodeInterpreter.AST {
             code.Add(Instruction.Hlt());
             break;
           }
-        case AstNodeType.BinaryOp:
-          {
+        case AstNodeType.BinaryOp: {
             var binaryOpNode = (BinaryAstNode)node;
             var left = binaryOpNode.Left;
             var right = binaryOpNode.Right;
@@ -152,8 +150,7 @@ namespace CodeInterpreter.AST {
                   code.Add(Instruction.Sta(new Arg(ArgType.Value, resultAddr, indirect: true)));
                   break;
                 }
-              case AstBinaryOp.Mul:
-                {
+              case AstBinaryOp.Mul: {
                   // mul is implemented as repeated addition
                   // a loop is used for incrementing the value at resultAddr
                   var tmpId = $"{binaryOpNode}_tmp";
@@ -183,8 +180,7 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Div:
-                {
+              case AstBinaryOp.Div: {
                   // div is implemented as repeated subtraction
                   // but the result will be given by the loop counter
                   // eg: for 2/2 the code will count how many times 2 can be subtracted from 2 with a >= 0 result
@@ -215,8 +211,7 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.Mod:
-                {
+              case AstBinaryOp.Mod: {
                   // mod is implemented as repeated subtraction
                   // but the result will be given by the last result value before (result -= right) < 0
                   // eg: for 3/2 the code will count how many times 2 can be subtracted from 3 with a result >= 0
@@ -244,17 +239,15 @@ namespace CodeInterpreter.AST {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
                     // if left >= right, jump to the next test
-                    Instruction.Jge(Arg.Val(count + 7)),
+                    Instruction.Jge(Arg.Val(count + 5)),
                     // if A < 0, return
-                    Instruction.Lda(Arg.Val(-1)),
-                    Instruction.Sta(resultAddrArg),
                     Instruction.Lda(Arg.Val(0)),
-                    Instruction.Jge(Arg.Val(count + 11)),
+                    Instruction.Jge(Arg.Val(count + 8)),
                     // test right < left
                     Instruction.Lda(rightArg),
                     Instruction.Suba(leftArg),
                     // at this point A can only be 0 (left = right) or negative (left > right)
-                    Instruction.Jge(Arg.Val(count + 3)), // if its 0 return 0
+                    Instruction.Jge(Arg.Val(count + 9)), // if its 0 return 0
                     Instruction.Lda(Arg.Val(-1)),
                     Instruction.Sta(resultAddrArg),
                   });
@@ -309,9 +302,8 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.IdxGet:
-                {
-                  Code.AddRange(new[] {
+              case AstBinaryOp.IdxGet: {
+                  code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
                     Instruction.Adda(Arg.Val(1)),
@@ -322,15 +314,14 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.IdxSet:
-                {
-                  Code.AddRange(new[] {
+              case AstBinaryOp.IdxSet: {
+                  code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
                     Instruction.Adda(Arg.Val(1)),
                     Instruction.Sta(resultAddrArg),
                     Instruction.Ldn(resultAddrArg),
-                    Instruction.Lda(Arg.Mem(1084)), 
+                    Instruction.Lda(Arg.Mem(1084)),
                     Instruction.Sta(Arg.N(true))
                   });
                   break;
@@ -368,7 +359,21 @@ namespace CodeInterpreter.AST {
               case AstConditionalOp.IfThenElse: {
                   childVisitor.Code.Clear();
                   conditionalNode.FalseBranch.Accept(childVisitor);
-                  var falseBranchCodeSection = childVisitor.Code.ToList();
+                  var falseBranchCode = childVisitor.Code.ToList();
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(count + 4)),
+                    Instruction.Lda(Arg.Val(0)),
+                    // if condition false, jump over true branch code section
+                    Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2)),
+                  });
+                  Code.AddRange(trueBranchCode);
+                  // skip false branch section if condition true, at the end of the execution of the true branch code
+                  Code.AddRange(new[] {
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2 + falseBranchCode.Count)),
+                  });
+                  Code.AddRange(falseBranchCode);
                   break;
                 }
               default:
