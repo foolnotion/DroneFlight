@@ -10,7 +10,7 @@ namespace CodeInterpreter.AST {
     UnaryOp,
     Loop,
     Conditional,
-    Array
+    ArrayAccess
   }
 
   public enum AstUnaryOp {
@@ -33,13 +33,16 @@ namespace CodeInterpreter.AST {
     Lte,
     Gt,
     Gte,
-    IdxGet
+  }
+
+  public enum AstArrayOp {
+    GetIndex,
+    SetIndex
   }
 
   public enum AstConditionalOp {
     IfThen,
     IfThenElse,
-    IdxSet
   }
 
   public enum AstLoopType {
@@ -74,15 +77,6 @@ namespace CodeInterpreter.AST {
     public abstract void Accept(AstNodeVisitor visitor);
 
     #region overloads providing syntactic sugar
-
-    public AstNode this[AstNode index] {
-      get {
-        if (Type != AstNodeType.Array)
-          throw new ArgumentException("Can only index using a constant or variable argument.");
-        return AstNode.IdxGet(this, index);
-      }
-    }
-
     public static AstNode operator <<(AstNode left, int value) {
       return Assign(left, AstNode.Constant(value));
     }
@@ -146,6 +140,17 @@ namespace CodeInterpreter.AST {
     #endregion
 
     #region factory methods
+    public static AstNode ArraySet(AstNode array, AstNode index, AstNode value) {
+      if (array.Type != AstNodeType.Variable)
+        throw new ArgumentException("Array argument should be of type Variable.");
+      return new ArrayAccessAstNode(AstArrayOp.SetIndex, array, index, value);
+    }
+
+    public static AstNode ArrayGet(AstNode array, AstNode index) {
+      if (array.Type != AstNodeType.Variable)
+        throw new ArgumentException("Array argument should be of type Variable.");
+      return new ArrayAccessAstNode(AstArrayOp.GetIndex, array, index);
+    }
 
     public static AstNode Block(params AstNode[] children) {
       return new AstBlockNode(children);
@@ -155,17 +160,12 @@ namespace CodeInterpreter.AST {
       return new ConstantAstNode(value);
     }
 
-    public static AstNode Variable(string name) {
-      return new VariableAstNode(name);
+    public static AstNode Variable(string name, int size = 1) {
+      return new VariableAstNode(name, size);
     }
-
-    public static AstNode Array(string name, int size) {
-      return new ArrayAstNode(name, size);
-    }
-
     public static AstNode Assign(AstNode left, AstNode right) {
       if (left.Type != AstNodeType.Variable)
-        throw new ArgumentException("Assignment target should be a variable.");
+        throw new ArgumentException("Assignment target (left argument) should be a variable.");
       return new BinaryAstNode(AstBinaryOp.Assign, left, right);
     }
 
@@ -217,16 +217,8 @@ namespace CodeInterpreter.AST {
       return new BinaryAstNode(AstBinaryOp.Gte, left, right);
     }
 
-    public static AstNode IdxGet(AstNode array, AstNode index) {
-      return new BinaryAstNode(AstBinaryOp.IdxGet, array, index);
-    }
-
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
       return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
-    }
-
-    public static AstNode IdxSet(AstNode array, AstNode index, AstNode value) {
-      return new ConditionalAstNode(AstConditionalOp.IdxSet, array, index, value);
     }
 
     public static AstNode IfThenElse(AstNode condition, AstNode trueBranch, AstNode falseBranch) {
@@ -302,9 +294,11 @@ namespace CodeInterpreter.AST {
 
   public class VariableAstNode : AstNode {
     public string VariableName { get; }
+    public int Size { get; } // size is 1 by default
 
-    internal VariableAstNode(string variableName) : base(AstNodeType.Variable, "VariableAstNode", true) {
+    internal VariableAstNode(string variableName, int size = 1) : base(AstNodeType.Variable, "VariableAstNode", true) {
       VariableName = variableName;
+      Size = size;
     }
 
     public override void Accept(AstNodeVisitor visitor) {
@@ -316,21 +310,28 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class ArrayAstNode : AstNode {
-    public string VariableName { get; }
-    public int Size { get; }
-
-    internal ArrayAstNode(string variableName, int size) : base(AstNodeType.Array, "ArrayAstNode", true) {
-      VariableName = variableName;
-      Size = size;
-    }
+  public class ArrayAccessAstNode : AstNode {
+    public AstArrayOp Op { get; }
+    public AstNode Array { get; }
+    public AstNode Index { get; }
+    public AstNode Value { get; }
 
     public override void Accept(AstNodeVisitor visitor) {
+      Array.Accept(visitor);
+      Index.Accept(visitor);
+      Value?.Accept(visitor);
       visitor.Visit(this);
     }
 
     public override string ToString() {
-      return $"Array: {VariableName}";
+      return $"ArrayAstNode: {Op}";
+    }
+
+    public ArrayAccessAstNode(AstArrayOp op, AstNode array, AstNode index, AstNode value = null) : base(AstNodeType.ArrayAccess, "ArrayAccessAstNode", false) {
+      Op = op;
+      Array = array;
+      Index = index;
+      Value = value;
     }
   }
 

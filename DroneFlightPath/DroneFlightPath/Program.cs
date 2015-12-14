@@ -19,42 +19,21 @@ namespace DroneFlightPath {
       Func<int, AstNode> _ = AstNode.Constant;
 
       var sb = new StringBuilder();
-      var rm = new RegisterMachine();
 
       var a = AstNode.Variable("a");
-      var b = AstNode.Variable("b");
-      var n = AstNode.Variable("n");
-      var tmp = AstNode.Variable("n");
-      var aa = AstNode.Assign(a, a + AstNode.Constant(5));
-      var ab = AstNode.Assign(a, a + AstNode.Constant(3));
-      var array = AstNode.Array("v", 30);
       var result = AstNode.Variable("result");
-
-
-      var block = new AstBlockNode(
-          AstNode.DoWhile(
-            a < _(10),
-            AstNode.IfThenElse(
-              a % _(2) | _(0),
-              AstNode.Assign(a, a + _(5)),
-              AstNode.Assign(a, a + _(3))
-            )
-          ),
-          AstNode.Assign(result, a)
-        );
-      //      var startNode = new AstBlockNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
-
-      var fib = AstNode.Block(
-        AstNode.Assign(n, AstNode.Constant(5)),
-        AstNode.Assign(a, AstNode.Constant(0)),
-        AstNode.Assign(b, AstNode.Constant(1)),
+      var arr = (VariableAstNode)AstNode.Variable("arr", 10);
+      var block = AstNode.Block(
         AstNode.DoWhile(
-          n > _(0),
+          a < AstNode.Constant(arr.Size),
           AstNode.Block(
-
+            AstNode.ArraySet(arr, a, a),
+            AstNode.Increment(a)
           )
-        ));
-
+        ),
+        AstNode.Assign(result, a + AstNode.ArrayGet(arr, a - _(1)))
+      );
+      //      var startNode = new AstBlockNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
@@ -67,13 +46,16 @@ namespace DroneFlightPath {
       Console.WriteLine("Generated ASM:");
       Console.WriteLine(sb);
 
-      foreach (var o in genVisitor.MemoryMap.Objects) {
-        if (genVisitor.NodeNames.ContainsKey(o.Key))
-          Console.WriteLine("{00} {1}", genVisitor.JumpLocations[o.Key], genVisitor.NodeNames[o.Key]);
-      }
-
+      var rm = new RegisterMachine();
+      genVisitor.Code.Add(Instruction.Hlt());
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
+
+      var addr = genVisitor.MemoryMap["arr"];
+      Console.WriteLine("Arr addr: " + addr);
+      Console.WriteLine("A addr: " + genVisitor.MemoryMap["a"]);
+      for (int i = addr; i < addr + arr.Size; ++i)
+        Console.WriteLine($"{arr.VariableName}[{i - addr}]: {rm.Memory[i]}");
 
       var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");
