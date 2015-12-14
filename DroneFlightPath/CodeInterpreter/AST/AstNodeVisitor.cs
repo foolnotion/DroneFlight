@@ -19,7 +19,7 @@ namespace CodeInterpreter.AST {
   }
 
   public class MemoryMap {
-    public int Start { get; } = 1000;
+    public int Start { get; } = 3000;
     public int End { get; } = 10000;
     public int Pointer { get; private set; }
 
@@ -36,24 +36,13 @@ namespace CodeInterpreter.AST {
       Pointer = Start;
     }
 
-    public int MapObject(string objectId) {
+    public int MapObject(string objectId, int size = 1) {
       if (objects == null)
         objects = new Dictionary<string, int>();
       int addr;
       if (objects.TryGetValue(objectId, out addr))
         return addr;
-      addr = Pointer++;
-      objects[objectId] = addr;
-      return addr;
-    }
-
-    public int MapObject(string objectId, int size) {
-      if (objects == null)
-        objects = new Dictionary<string, int>();
-      int addr;
-      if (objects.TryGetValue(objectId, out addr))
-        return addr;
-      addr = Pointer++;
+      addr = Pointer;
       objects[objectId] = addr;
       Pointer += size;
       return addr;
@@ -68,15 +57,18 @@ namespace CodeInterpreter.AST {
     public MemoryMap MemoryMap { get; }
 
     public MapObjectsToMemoryVisitor() {
-      MemoryMap = new MemoryMap(1000, 10000);
+      MemoryMap = new MemoryMap(3000, 10000);
     }
 
     public override void Visit(AstNode node) {
       if (node.Type == AstNodeType.Constant)
         return;
       var variable = node as VariableAstNode;
-      var id = variable == null ? node.Id : variable.VariableName;
-      MemoryMap.MapObject(id);
+      if (variable == null) {
+        MemoryMap.MapObject(node.Id);
+      } else {
+        MemoryMap.MapObject(variable.VariableName, variable.Size);
+      }
     }
   }
 
@@ -108,11 +100,6 @@ namespace CodeInterpreter.AST {
             var addr = MemoryMap.MapObject(variableNode.VariableName);
             return Arg.Mem(addr);
           }
-        case AstNodeType.Array: {
-            var arrayNode = (ArrayAstNode)leaf;
-            var addr = MemoryMap.MapObject(arrayNode.VariableName, arrayNode.Size);
-            return Arg.Mem(addr);
-          }
         default:
           throw new ArgumentException("Unknown leaf node type.");
       }
@@ -122,6 +109,16 @@ namespace CodeInterpreter.AST {
       if (node.IsLeaf) return -1;
       var count = Code.Count;
       switch (node.Type) {
+        case AstNodeType.ArrayAccess: {
+            var arrayAccessNode = (ArrayAccessAstNode)node;
+            // do not consider the array param since it should always be a leaf (type: Variable)
+            var index = arrayAccessNode.Index;
+            var value = arrayAccessNode.Value;
+            if (index.IsLeaf && value.IsLeaf) return count;
+            if (index.IsLeaf)
+              return JumpLocations[value.Id];
+            return JumpLocations[index.Id];
+          }
         case AstNodeType.BinaryOp: {
             var binaryOpNode = (BinaryAstNode)node;
             var left = binaryOpNode.Left;
@@ -165,8 +162,6 @@ namespace CodeInterpreter.AST {
           }
         case AstNodeType.Constant:
         case AstNodeType.Variable:
-        case AstNodeType.Array:
-          return -1;
         default:
           throw new ArgumentException("Unknown loop type.");
       }
@@ -178,14 +173,41 @@ namespace CodeInterpreter.AST {
       var count = Code.Count;
 
       switch (node.Type) {
-        case AstNodeType.Array: {
-            var arrayNode = (ArrayAstNode)node;
-            Code.Add(Instruction.Lda(Arg.Val(arrayNode.Size)));
-            Code.Add(Instruction.Sta(resultAddrArg));
+        case AstNodeType.Block: {
             break;
           }
-        case AstNodeType.Block: {
-            Code.Add(Instruction.Hlt());
+        case AstNodeType.ArrayAccess: {
+            var arrayAccessNode = (ArrayAccessAstNode)node;
+            var array = arrayAccessNode.Array;
+            var index = arrayAccessNode.Index;
+            var arrayArg = Arg.Val(LeafToArg(array).Value); // take the address and convert it into a value so we can add the offset
+            var indexArg = index.IsLeaf ? LeafToArg(index) : Arg.Mem(MemoryMap[index.Id]);
+            switch (arrayAccessNode.Op) {
+              case AstArrayOp.GetIndex: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(arrayArg),
+                    Instruction.Adda(indexArg),
+                    Instruction.Ldn(Arg.A(false)),
+                    Instruction.Lda(Arg.N(true)),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+              case AstArrayOp.SetIndex: {
+                  var value = arrayAccessNode.Value;
+                  var valueArg = value.IsLeaf ? LeafToArg(value) : Arg.Mem(MemoryMap[value.Id]);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(arrayArg),
+                    Instruction.Adda(indexArg),
+                    Instruction.Ldn(Arg.A(false)),
+                    Instruction.Lda(valueArg),
+                    Instruction.Sta(Arg.N(true))
+                  });
+                  break;
+                }
+              default:
+                throw new Exception("Unknown array access op.");
+            }
             break;
           }
         case AstNodeType.BinaryOp: {
@@ -199,8 +221,8 @@ namespace CodeInterpreter.AST {
               case AstBinaryOp.Assign: {
                   Code.AddRange(new[] {
                     Instruction.Lda(rightArg),
-                    Instruction.Sta(leftArg),
-                    Instruction.Sta(resultAddrArg)
+                    Instruction.Sta(leftArg),      // left arg should be variable or binaryop of type index
+                    Instruction.Sta(resultAddrArg) // intermediate result for assign node
                   });
                   break;
                 }
@@ -370,18 +392,6 @@ namespace CodeInterpreter.AST {
                   });
                   break;
                 }
-              case AstBinaryOp.IdxGet: {
-                  Code.AddRange(new[] {
-                    Instruction.Lda(leftArg),
-                    Instruction.Adda(rightArg),
-                    Instruction.Adda(Arg.Val(1)),
-                    Instruction.Sta(resultAddrArg),
-                    Instruction.Ldn(resultAddrArg),
-                    Instruction.Lda(Arg.N(true)),
-                    Instruction.Sta(resultAddrArg)
-                  });
-                  break;
-                }
               case AstBinaryOp.Lte: {
                   throw new NotImplementedException();
                 }
@@ -490,8 +500,8 @@ namespace CodeInterpreter.AST {
     }
 
     public override void Visit(AstNode node) {
+      if (node.IsLeaf) return;
       NodeNames[node.Id] = node.ToString();
-      if (node.Type == AstNodeType.Variable || node.Type == AstNodeType.Constant) return;
       JumpLocations[node.Id] = CalculateJumpLocation(node);
       GenerateAsm(node);
     }
