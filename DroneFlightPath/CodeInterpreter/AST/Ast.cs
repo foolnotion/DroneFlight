@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Text;
 
 namespace CodeInterpreter.AST {
   public enum AstNodeType {
-    StartNode,
+    Block,
     Constant,
     Variable,
     BinaryOp,
@@ -243,8 +244,9 @@ namespace CodeInterpreter.AST {
     #endregion
   }
 
-  public class AstStartNode : AstNode {
-    public AstStartNode(params AstNode[] children) : base(AstNodeType.StartNode, "AstStartNode", false) {
+  // a block represents a sequence of instructions executed in order
+  public class AstBlockNode : AstNode {
+    public AstBlockNode(params AstNode[] children) : base(AstNodeType.Block, "AstBlockNode", false) {
       Children = children;
     }
 
@@ -255,6 +257,15 @@ namespace CodeInterpreter.AST {
     }
 
     public AstNode[] Children { get; }
+
+    public override string ToString() {
+      var sb = new StringBuilder();
+      sb.AppendLine("Block: {");
+      foreach (var c in Children)
+        sb.AppendLine($"\t{c}");
+      sb.AppendLine("}");
+      return sb.ToString();
+    }
   }
 
   public class ConstantAstNode : AstNode {
@@ -387,6 +398,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override void Accept(AstNodeVisitor visitor) {
+      // for the DoWhile loop, the body needs to be executed before the condition
       if (LoopType == AstLoopType.DoWhile) {
         Body.Accept(visitor);
       }

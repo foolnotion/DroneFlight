@@ -20,21 +20,29 @@ namespace DroneFlightPath {
 
       var a = AstNode.Variable("a");
       var b = AstNode.Variable("b");
-      var aa = AstNode.Assign(a, AstNode.Constant(1));
-      var ab = AstNode.Assign(b, AstNode.Constant(2));
+      var aa = AstNode.Assign(a, a + AstNode.Constant(5));
+      var ab = AstNode.Assign(a, a + AstNode.Constant(3));
       var array = AstNode.Array("v", 30);
       var result = AstNode.Variable("result");
 
+      var zero = AstNode.Constant(0);
       var one = AstNode.Constant(1);
       var two = AstNode.Constant(2);
 
-      var startNode = new AstStartNode(
-        //        AstNode.Assign(a, AstNode.Constant(2)),
-        //        AstNode.Assign(b, AstNode.Constant(10)),
-        AstNode.DoWhile(a < AstNode.Constant(10), AstNode.Assign(a, a + AstNode.Constant(1))),
-        AstNode.Assign(result, a)
-      );
-      //      var startNode = new AstStartNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
+      var startNode = new AstBlockNode(
+          //                          AstNode.Assign(a, AstNode.Constant(2)),
+          //                                    AstNode.Assign(b, AstNode.Constant(10)),
+          AstNode.While(
+            a < AstNode.Constant(10),
+            AstNode.IfThenElse(
+              a % two | zero,
+              //              AstNode.Assign(a, a + AstNode.Constant(10)),
+              aa,
+              ab)
+            ),
+          AstNode.Assign(result, a)
+        );
+      //      var startNode = new AstBlockNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
 
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
@@ -48,13 +56,13 @@ namespace DroneFlightPath {
       Console.WriteLine("Generated ASM:");
       Console.WriteLine(sb);
 
-      rm.LoadIntructions(genVisitor.Code);
-      rm.Run();
-
       foreach (var o in genVisitor.MemoryMap.Objects) {
         if (genVisitor.NodeNames.ContainsKey(o.Key))
           Console.WriteLine("{00} {1}", genVisitor.JumpLocations[o.Key], genVisitor.NodeNames[o.Key]);
       }
+
+      rm.LoadIntructions(genVisitor.Code);
+      rm.Run();
 
       var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");

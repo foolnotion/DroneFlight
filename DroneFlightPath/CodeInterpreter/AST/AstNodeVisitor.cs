@@ -118,6 +118,60 @@ namespace CodeInterpreter.AST {
       }
     }
 
+    private int CalculateJumpLocation(AstNode node) {
+      if (node.IsLeaf) return -1;
+      var count = Code.Count;
+      switch (node.Type) {
+        case AstNodeType.BinaryOp: {
+            var binaryOpNode = (BinaryAstNode)node;
+            var left = binaryOpNode.Left;
+            var right = binaryOpNode.Right;
+            if (left.IsLeaf && right.IsLeaf) return count;
+            if (left.IsLeaf)
+              return JumpLocations[right.Id];
+            return JumpLocations[left.Id];
+          }
+        case AstNodeType.UnaryOp: {
+            var unaryOpNode = (UnaryAstNode)node;
+            var arg = unaryOpNode.Arg;
+            return arg.IsLeaf ? count : JumpLocations[arg.Id];
+          }
+        case AstNodeType.Conditional: {
+            var conditionalNode = (ConditionalAstNode)node;
+            var condition = conditionalNode.Condition;
+            return condition.IsLeaf ? count : JumpLocations[condition.Id];
+          }
+        case AstNodeType.Loop: {
+            var loopNode = (LoopAstNode)node;
+            var condition = loopNode.Condition;
+            var body = loopNode.Body;
+            switch (loopNode.LoopType) {
+              case AstLoopType.While: {
+                  return condition.IsLeaf ? count : JumpLocations[condition.Id];
+                }
+              case AstLoopType.DoWhile: {
+                  return body.IsLeaf ? (condition.IsLeaf ? count : JumpLocations[condition.Id]) : JumpLocations[body.Id];
+                }
+              default:
+                throw new Exception("Unknown loop type.");
+            }
+          }
+        case AstNodeType.Block: {
+            var blockNode = (AstBlockNode)node;
+            foreach (var child in blockNode.Children)
+              if (!child.IsLeaf)
+                return JumpLocations[child.Id];
+            return count;
+          }
+        case AstNodeType.Constant:
+        case AstNodeType.Variable:
+        case AstNodeType.Array:
+          return -1;
+        default:
+          throw new ArgumentException("Unknown loop type.");
+      }
+    }
+
     public List<Instruction> GenerateAsm(AstNode node) {
       var resultAddr = MemoryMap.MapObject(node.Id);
       var resultAddrArg = Arg.Mem(resultAddr);
@@ -131,7 +185,7 @@ namespace CodeInterpreter.AST {
             instructions.Add(Instruction.Sta(resultAddrArg));
             break;
           }
-        case AstNodeType.StartNode: {
+        case AstNodeType.Block: {
             instructions.Add(Instruction.Hlt());
             break;
           }
@@ -231,7 +285,7 @@ namespace CodeInterpreter.AST {
                   // but the result will be given by the last result value before (result -= right) < 0
                   // eg: for 3/2 the code will count how many times 2 can be subtracted from 3 with a result >= 0
                   var tmpId = $"{binaryOpNode}_tmp";
-                  var tmpAddrArg = new Arg(ArgType.Value, MemoryMap.MapObject(tmpId), indirect: true); // address for the counter (value will be initially zero)
+                  var tmpAddrArg = Arg.Mem(MemoryMap.MapObject(tmpId)); // address for the counter (value will be initially zero)
                   instructions.AddRange(new[] {
                     // initialize result value with left
                     Instruction.Lda(leftArg),
@@ -306,14 +360,14 @@ namespace CodeInterpreter.AST {
                 }
               case AstBinaryOp.Gt: {
                   instructions.AddRange(new[] {
-                  Instruction.Lda(rightArg),
-                  Instruction.Suba(leftArg),
-                  // if left < right, return 0
-                  Instruction.Jge(Arg.Val(count + 5)),
-                  Instruction.Lda(Arg.Val(0)),
-                  Instruction.Jge(Arg.Val(count + 6)),
-                  Instruction.Lda(Arg.Val(-1)),
-                  Instruction.Sta(resultAddrArg)
+                    Instruction.Lda(rightArg),
+                    Instruction.Suba(leftArg),
+                    // if left < right, return 0
+                    Instruction.Jge(Arg.Val(count + 5)),
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(count + 6)),
+                    Instruction.Lda(Arg.Val(-1)),
+                    Instruction.Sta(resultAddrArg)
                   });
                   break;
                 }
@@ -385,29 +439,18 @@ namespace CodeInterpreter.AST {
           }
         case AstNodeType.Loop: {
             var loopNode = (LoopAstNode)node;
-            var conditionArg = Arg.Mem(MemoryMap.MapObject(loopNode.Condition.Id));
+            var body = loopNode.Body;
+            var condition = loopNode.Condition;
+            var conditionArg = Arg.Mem(MemoryMap.MapObject(condition.Id));
+
             switch (loopNode.LoopType) {
               case AstLoopType.While: {
-                  var childVisitor = new GenerateAsmVisitor(MemoryMap);
-                  loopNode.Body.Accept(childVisitor);
-                  var loopBodyCode = childVisitor.Code.ToList();
-                  instructions.AddRange(new[] {
-                    Instruction.Lda(conditionArg),
-                    Instruction.Jge(Arg.Val(count + 4)),
-                    Instruction.Lda(Arg.Val(0)),
-                    Instruction.Jge(Arg.Val(count + 4 + loopBodyCode.Count + 2)),
-                  });
-                  instructions.AddRange(loopBodyCode);
-                  instructions.AddRange(new[] {
-                    Instruction.Lda(conditionArg),
-                    Instruction.Jge(Arg.Val(JumpLocations[loopNode.Condition.Id]))
-                  });
-                  break;
+                  throw new NotSupportedException("The while loop is currently not supported.");
                 }
               case AstLoopType.DoWhile: {
                   instructions.AddRange(new[] {
                     Instruction.Lda(conditionArg),
-                    Instruction.Jge(Arg.Val(JumpLocations[loopNode.Body.Id]-3))
+                    Instruction.Jge(Arg.Val(JumpLocations[body.Id]))
                   });
                   break;
                 }
@@ -451,9 +494,8 @@ namespace CodeInterpreter.AST {
     public override void Visit(AstNode node) {
       NodeNames[node.Id] = node.ToString();
       if (node.Type == AstNodeType.Variable || node.Type == AstNodeType.Constant) return;
-      var count = Code.Count;
+      JumpLocations[node.Id] = CalculateJumpLocation(node);
       Code.AddRange(GenerateAsm(node));
-      JumpLocations[node.Id] = count; // WRONG
     }
   }
 }
