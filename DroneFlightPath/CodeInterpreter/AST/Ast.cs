@@ -75,6 +75,18 @@ namespace CodeInterpreter.AST {
 
     #region overloads providing syntactic sugar
 
+    public AstNode this[AstNode index] {
+      get {
+        if (!(Type != AstNodeType.Array))
+          throw new ArgumentException("Can only index using a constant or variable argument.");
+        return AstNode.IdxGet(this, index);
+      }
+    }
+
+    public static AstNode operator <<(AstNode left, int value) {
+      return Assign(left, AstNode.Constant(value));
+    }
+
     public static AstNode operator +(AstNode left, AstNode right) {
       return Add(left, right);
     }
@@ -134,6 +146,10 @@ namespace CodeInterpreter.AST {
     #endregion
 
     #region factory methods
+
+    public static AstNode Block(params AstNode[] children) {
+      return new AstBlockNode(children);
+    }
 
     public static AstNode Constant(int value) {
       return new ConstantAstNode(value);
