@@ -100,6 +100,10 @@ namespace CodeInterpreter.AST {
             var addr = MemoryMap.MapObject(variableNode.VariableName);
             return Arg.Mem(addr);
           }
+        case AstNodeType.Pointer: {
+            var pointerNode = (PointerAstNode)leaf;
+            return Arg.Mem(pointerNode.Value);
+          }
         default:
           throw new ArgumentException("Unknown leaf node type.");
       }

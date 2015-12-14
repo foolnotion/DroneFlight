@@ -23,17 +23,24 @@ namespace DroneFlightPath {
       var a = AstNode.Variable("a");
       var result = AstNode.Variable("result");
       var arr = (VariableAstNode)AstNode.Variable("arr", 10);
+
+      var cx = AstNode.Variable("cx");
+      var cy = AstNode.Variable("cy");
+
       var block = AstNode.Block(
-        AstNode.DoWhile(
-          a < AstNode.Constant(arr.Size),
-          AstNode.Block(
-            AstNode.ArraySet(arr, a, a),
-            AstNode.Increment(a)
-          )
-        ),
-        AstNode.Assign(result, a + AstNode.ArrayGet(arr, a - _(1)))
+
       );
-      //      var startNode = new AstBlockNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
+
+      //      var block = AstNode.Block(
+      //        AstNode.DoWhile(
+      //          a < _(arr.Size),
+      //          AstNode.Block(
+      //            AstNode.ArraySet(arr, a, a),
+      //            a++
+      //          )
+      //        ),
+      //        AstNode.Assign(result, a + AstNode.ArrayGet(arr, a - _(1)))
+      //      );
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);

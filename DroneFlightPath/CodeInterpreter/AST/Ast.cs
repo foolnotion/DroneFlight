@@ -6,6 +6,7 @@ namespace CodeInterpreter.AST {
     Block,
     Constant,
     Variable,
+    Pointer,
     BinaryOp,
     UnaryOp,
     Loop,
@@ -136,7 +137,6 @@ namespace CodeInterpreter.AST {
     public static AstNode operator ++(AstNode node) {
       return Increment(node);
     }
-
     #endregion
 
     #region factory methods
@@ -154,6 +154,10 @@ namespace CodeInterpreter.AST {
 
     public static AstNode Block(params AstNode[] children) {
       return new AstBlockNode(children);
+    }
+
+    public static AstNode Pointer(int value) {
+      return new PointerAstNode(value);
     }
 
     public static AstNode Constant(int value) {
@@ -289,6 +293,23 @@ namespace CodeInterpreter.AST {
 
     public override string ToString() {
       return $"Constant {Value}";
+    }
+  }
+
+  public class PointerAstNode : AstNode {
+    // points to a memory address
+    public int Value { get; }
+
+    internal PointerAstNode(int value) : base(AstNodeType.Constant, "PointerAstNode", true) {
+      Value = value;
+    }
+
+    public override void Accept(AstNodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public override string ToString() {
+      return $"Pointer {Value}";
     }
   }
 
