@@ -77,7 +77,7 @@ namespace CodeInterpreter.AST {
 
     public AstNode this[AstNode index] {
       get {
-        if (!(Type != AstNodeType.Array))
+        if (Type != AstNodeType.Array)
           throw new ArgumentException("Can only index using a constant or variable argument.");
         return AstNode.IdxGet(this, index);
       }
