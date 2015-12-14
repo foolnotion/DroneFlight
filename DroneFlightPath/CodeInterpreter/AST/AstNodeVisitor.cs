@@ -172,21 +172,20 @@ namespace CodeInterpreter.AST {
       }
     }
 
-    public List<Instruction> GenerateAsm(AstNode node) {
+    public void GenerateAsm(AstNode node) {
       var resultAddr = MemoryMap.MapObject(node.Id);
       var resultAddrArg = Arg.Mem(resultAddr);
       var count = Code.Count;
 
-      var instructions = new List<Instruction>();
       switch (node.Type) {
         case AstNodeType.Array: {
             var arrayNode = (ArrayAstNode)node;
-            instructions.Add(Instruction.Lda(Arg.Val(arrayNode.Size)));
-            instructions.Add(Instruction.Sta(resultAddrArg));
+            Code.Add(Instruction.Lda(Arg.Val(arrayNode.Size)));
+            Code.Add(Instruction.Sta(resultAddrArg));
             break;
           }
         case AstNodeType.Block: {
-            instructions.Add(Instruction.Hlt());
+            Code.Add(Instruction.Hlt());
             break;
           }
         case AstNodeType.BinaryOp: {
@@ -198,7 +197,7 @@ namespace CodeInterpreter.AST {
             #region binary operation switch
             switch (binaryOpNode.Op) {
               case AstBinaryOp.Assign: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(rightArg),
                     Instruction.Sta(leftArg),
                     Instruction.Sta(resultAddrArg)
@@ -206,7 +205,7 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstBinaryOp.Add: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
                     Instruction.Sta(resultAddrArg)
@@ -214,9 +213,9 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstBinaryOp.Sub: {
-                  instructions.Add(Instruction.Lda(leftArg));
-                  instructions.Add(Instruction.Suba(rightArg));
-                  instructions.Add(Instruction.Sta(new Arg(ArgType.Value, resultAddr, indirect: true)));
+                  Code.Add(Instruction.Lda(leftArg));
+                  Code.Add(Instruction.Suba(rightArg));
+                  Code.Add(Instruction.Sta(new Arg(ArgType.Value, resultAddr, indirect: true)));
                   break;
                 }
               case AstBinaryOp.Mul: {
@@ -224,7 +223,7 @@ namespace CodeInterpreter.AST {
                   // a loop is used for incrementing the value at resultAddr
                   var tmpId = $"{binaryOpNode}_tmp";
                   var tmpAddrArg = Arg.Mem(MemoryMap.MapObject(tmpId));
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     // store 0 in the result
                     Instruction.Lda(Arg.Val(0)),
                     Instruction.Sta(resultAddrArg),
@@ -255,7 +254,7 @@ namespace CodeInterpreter.AST {
                   // eg: for 2/2 the code will count how many times 2 can be subtracted from 2 with a >= 0 result
                   var tmpId = $"{binaryOpNode}_tmp";
                   var tmpAddrArg = new Arg(ArgType.Value, MemoryMap.MapObject(tmpId), indirect: true); // address for the counter (value will be initially zero)
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     // initialize result value with left
                     Instruction.Lda(leftArg),
                     Instruction.Sta(resultAddrArg),
@@ -286,7 +285,7 @@ namespace CodeInterpreter.AST {
                   // eg: for 3/2 the code will count how many times 2 can be subtracted from 3 with a result >= 0
                   var tmpId = $"{binaryOpNode}_tmp";
                   var tmpAddrArg = Arg.Mem(MemoryMap.MapObject(tmpId)); // address for the counter (value will be initially zero)
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     // initialize result value with left
                     Instruction.Lda(leftArg),
                     Instruction.Sta(tmpAddrArg),
@@ -304,7 +303,7 @@ namespace CodeInterpreter.AST {
                   throw new NotImplementedException();
                 }
               case AstBinaryOp.Eq: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
                     // if left >= right, jump to the next test
@@ -325,7 +324,7 @@ namespace CodeInterpreter.AST {
               case AstBinaryOp.Neq: {
                   // this operation should return the exact oposite values compared to Eq
                   var end = Arg.Val(count + 11);
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
                     // if left >= right, jump to the next test
@@ -346,7 +345,7 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstBinaryOp.Lt: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Suba(rightArg),
                     // if left < right, return 0
@@ -359,7 +358,7 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstBinaryOp.Gt: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(rightArg),
                     Instruction.Suba(leftArg),
                     // if left < right, return 0
@@ -372,7 +371,7 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstBinaryOp.IdxGet: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(leftArg),
                     Instruction.Adda(rightArg),
                     Instruction.Adda(Arg.Val(1)),
@@ -403,33 +402,33 @@ namespace CodeInterpreter.AST {
             var conditionArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.Condition.Id));
             switch (conditionalNode.Op) {
               case AstConditionalOp.IfThen: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(conditionArg),
                     Instruction.Jge(Arg.Val(count + 4)),
                     Instruction.Lda(Arg.Val(0)),
                     Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count)),
                   });
-                  instructions.AddRange(trueBranchCode);
+                  Code.AddRange(trueBranchCode);
                   break;
                 }
               case AstConditionalOp.IfThenElse: {
                   childVisitor.Code.Clear();
                   conditionalNode.FalseBranch.Accept(childVisitor);
                   var falseBranchCode = childVisitor.Code.ToList();
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(conditionArg),
                     Instruction.Jge(Arg.Val(count + 4)),
                     Instruction.Lda(Arg.Val(0)),
                     // if condition false, jump over true branch code section
                     Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2)),
                   });
-                  instructions.AddRange(trueBranchCode);
+                  Code.AddRange(trueBranchCode);
                   // skip false branch section if condition true, at the end of the execution of the true branch code
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(Arg.Val(0)),
                     Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2 + falseBranchCode.Count)),
                   });
-                  instructions.AddRange(falseBranchCode);
+                  Code.AddRange(falseBranchCode);
                   break;
                 }
               default:
@@ -448,7 +447,7 @@ namespace CodeInterpreter.AST {
                   throw new NotSupportedException("The while loop is currently not supported.");
                 }
               case AstLoopType.DoWhile: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(conditionArg),
                     Instruction.Jge(Arg.Val(JumpLocations[body.Id]))
                   });
@@ -465,7 +464,7 @@ namespace CodeInterpreter.AST {
             var unaryArgAddr = unaryArg.IsLeaf ? LeafToArg(unaryArg) : Arg.Mem(MemoryMap[unaryArg.Id]);
             switch (unaryOpNode.Op) {
               case AstUnaryOp.Increment: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(unaryArgAddr),
                     Instruction.Adda(Arg.Val(1)),
                     Instruction.Sta(unaryArgAddr),
@@ -474,7 +473,7 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstUnaryOp.Decrement: {
-                  instructions.AddRange(new[] {
+                  Code.AddRange(new[] {
                     Instruction.Lda(unaryArgAddr),
                     Instruction.Suba(Arg.Val(1)),
                     Instruction.Sta(unaryArgAddr),
@@ -488,14 +487,13 @@ namespace CodeInterpreter.AST {
         default:
           throw new Exception("Unknown AST node type.");
       }
-      return instructions;
     }
 
     public override void Visit(AstNode node) {
       NodeNames[node.Id] = node.ToString();
       if (node.Type == AstNodeType.Variable || node.Type == AstNodeType.Constant) return;
       JumpLocations[node.Id] = CalculateJumpLocation(node);
-      Code.AddRange(GenerateAsm(node));
+      GenerateAsm(node);
     }
   }
 }
