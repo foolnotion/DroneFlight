@@ -29,11 +29,12 @@ namespace DroneFlightPath {
       var two = AstNode.Constant(2);
 
       var startNode = new AstStartNode(
-        AstNode.Assign(a, AstNode.Constant(2)),
+        //        AstNode.Assign(a, AstNode.Constant(2)),
         //        AstNode.Assign(b, AstNode.Constant(10)),
         AstNode.DoWhile(a < AstNode.Constant(10), AstNode.Assign(a, a + AstNode.Constant(1))),
         AstNode.Assign(result, a)
       );
+      //      var startNode = new AstStartNode(AstNode.While(one < two, AstNode.Assign(a, a + AstNode.Constant(1))));
 
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       startNode.Accept(mmapVisitor);
@@ -49,6 +50,11 @@ namespace DroneFlightPath {
 
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
+
+      foreach (var o in genVisitor.MemoryMap.Objects) {
+        if (genVisitor.NodeNames.ContainsKey(o.Key))
+          Console.WriteLine("{00} {1}", genVisitor.JumpLocations[o.Key], genVisitor.NodeNames[o.Key]);
+      }
 
       var resultAddr = genVisitor.MemoryMap["result"];
       Console.WriteLine($"Result addr: {resultAddr}");
