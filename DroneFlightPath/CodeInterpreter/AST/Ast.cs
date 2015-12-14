@@ -153,6 +153,10 @@ namespace CodeInterpreter.AST {
       return new ArrayAccessAstNode(AstArrayOp.GetIndex, array, index);
     }
 
+    public static AstNode Return() {
+      return new AstReturnNode();
+    }
+
     public static AstNode Block(params AstNode[] children) {
       return new AstBlockNode(children);
     }
@@ -258,7 +262,7 @@ namespace CodeInterpreter.AST {
   }
 
   public class AstReturnNode : AstNode {
-    public AstReturnNode() : base(AstNodeType.Return, "AstReturnNode", false) { }
+    internal AstReturnNode() : base(AstNodeType.Return, "AstReturnNode", false) { }
 
     public override void Accept(AstNodeVisitor visitor) {
       visitor.Visit(this);
@@ -271,7 +275,7 @@ namespace CodeInterpreter.AST {
 
   // a block represents a sequence of instructions executed in order
   public class AstBlockNode : AstNode {
-    public AstBlockNode(params AstNode[] children) : base(AstNodeType.Block, "AstBlockNode", false) {
+    internal AstBlockNode(params AstNode[] children) : base(AstNodeType.Block, "AstBlockNode", false) {
       Children = children;
     }
 
