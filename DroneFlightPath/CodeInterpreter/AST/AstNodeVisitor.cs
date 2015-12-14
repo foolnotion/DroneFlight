@@ -113,6 +113,9 @@ namespace CodeInterpreter.AST {
       if (node.IsLeaf) return -1;
       var count = Code.Count;
       switch (node.Type) {
+        case AstNodeType.Return: {
+            return -1;
+          }
         case AstNodeType.ArrayAccess: {
             var arrayAccessNode = (ArrayAccessAstNode)node;
             // do not consider the array param since it should always be a leaf (type: Variable)
@@ -164,8 +167,6 @@ namespace CodeInterpreter.AST {
                 return JumpLocations[child.Id];
             return count;
           }
-        case AstNodeType.Constant:
-        case AstNodeType.Variable:
         default:
           throw new ArgumentException("Unknown loop type.");
       }
@@ -178,6 +179,10 @@ namespace CodeInterpreter.AST {
 
       switch (node.Type) {
         case AstNodeType.Block: {
+            break;
+          }
+        case AstNodeType.Return: {
+            Code.Add(Instruction.Hlt());
             break;
           }
         case AstNodeType.ArrayAccess: {

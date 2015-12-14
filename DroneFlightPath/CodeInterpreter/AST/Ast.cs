@@ -11,7 +11,8 @@ namespace CodeInterpreter.AST {
     UnaryOp,
     Loop,
     Conditional,
-    ArrayAccess
+    ArrayAccess,
+    Return
   }
 
   public enum AstUnaryOp {
@@ -168,8 +169,8 @@ namespace CodeInterpreter.AST {
       return new VariableAstNode(name, size);
     }
     public static AstNode Assign(AstNode left, AstNode right) {
-      if (left.Type != AstNodeType.Variable)
-        throw new ArgumentException("Assignment target (left argument) should be a variable.");
+      if (left.Type != AstNodeType.Variable && left.Type != AstNodeType.Pointer)
+        throw new ArgumentException("Assignment target (left argument) should be a variable or a pointer.");
       return new BinaryAstNode(AstBinaryOp.Assign, left, right);
     }
 
@@ -256,6 +257,18 @@ namespace CodeInterpreter.AST {
     #endregion
   }
 
+  public class AstReturnNode : AstNode {
+    public AstReturnNode() : base(AstNodeType.Return, "AstReturnNode", false) { }
+
+    public override void Accept(AstNodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    public override string ToString() {
+      return $"{Type}";
+    }
+  }
+
   // a block represents a sequence of instructions executed in order
   public class AstBlockNode : AstNode {
     public AstBlockNode(params AstNode[] children) : base(AstNodeType.Block, "AstBlockNode", false) {
@@ -292,7 +305,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"Constant {Value}";
+      return $"{Value}";
     }
   }
 
@@ -300,7 +313,7 @@ namespace CodeInterpreter.AST {
     // points to a memory address
     public int Value { get; }
 
-    internal PointerAstNode(int value) : base(AstNodeType.Constant, "PointerAstNode", true) {
+    internal PointerAstNode(int value) : base(AstNodeType.Pointer, "PointerAstNode", true) {
       Value = value;
     }
 
@@ -309,7 +322,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"Pointer {Value}";
+      return $"[{Value}]";
     }
   }
 
@@ -327,7 +340,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"Var: {VariableName}";
+      return $"Var \"{VariableName}\"";
     }
   }
 
@@ -345,7 +358,8 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"ArrayAstNode: {Op}";
+      var v = Value?.ToString() ?? "";
+      return $"{Op}({((VariableAstNode)Array).VariableName} {Index} {v})";
     }
 
     public ArrayAccessAstNode(AstArrayOp op, AstNode array, AstNode index, AstNode value = null) : base(AstNodeType.ArrayAccess, "ArrayAccessAstNode", false) {
@@ -371,7 +385,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"UnaryOp: ({Op} {Arg})";
+      return $"{Op}({Arg})";
     }
   }
 
@@ -394,7 +408,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"BinaryOp: ({Op} {Left} {Right})";
+      return $"{Op}({Left}, {Right})";
     }
   }
 
@@ -418,7 +432,7 @@ namespace CodeInterpreter.AST {
     }
 
     public override string ToString() {
-      return $"Conditional: {Condition} {TrueBranch} {FalseBranch}";
+      return $"{Op}({Condition}, {TrueBranch}, {FalseBranch})";
     }
   }
 
@@ -446,7 +460,7 @@ namespace CodeInterpreter.AST {
 
     public override string ToString() {
       var loopName = LoopType == AstLoopType.While ? "While" : "DoWhile";
-      return $"{loopName} {Condition} {Body}";
+      return $"{loopName}({Condition}, {Body})";
     }
   }
 }
