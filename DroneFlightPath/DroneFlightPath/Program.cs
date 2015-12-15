@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using CodeInterpreter;
 using CodeInterpreter.AST;
@@ -26,12 +25,16 @@ namespace DroneFlightPath {
       for (int i = 0; i < genVisitor.Code.Count; ++i) {
         sb.AppendLine($"{genVisitor.Code[i]}");
       }
-      File.WriteAllText(@"C:\\Users\\P40913\\Projects\\TechOn2015\\DroneFlightPath\\DroneFlightPath\\TestFile\\07_intoTheDark.txt", sb.ToString());
+      //      File.WriteAllText(@"C:\\Users\\Bogdan\\Projects\\TechOn2015\\DroneFlightPath\\DroneFlightPath\\TestFile\\07_intoTheDark.txt", sb.ToString());
       var rm = new RegisterMachine();
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
 
-      for (int i = 0; i < 30; ++i) {
+      Console.WriteLine($"3002: {rm.Memory[3002]}");
+      Console.WriteLine($"3003: {rm.Memory[3003]}");
+      Console.WriteLine($"3004: {rm.Memory[3004]}");
+
+      for (int i = 0; i < 7; ++i) {
         Console.WriteLine($"Mem[{i}]: {rm.Memory[i]}");
       }
     }

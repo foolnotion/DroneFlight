@@ -9,7 +9,7 @@ namespace DroneFlightPath {
     public static ast Mem(ast addr, ast value) { return ast.MemoryWrite(addr, value); }
     public static ast Set(ast target, ast source) { return ast.Assign(target, source); }
     public static ast If(ast condition, ast trueBranch, ast falseBranch = null) {
-      return falseBranch == null ? ast.IfThen(condition, trueBranch) : ast.IfThenElse(condition, trueBranch, falseBranch);
+      return object.Equals(falseBranch, null) ? ast.IfThen(condition, trueBranch) : ast.IfThenElse(condition, trueBranch, falseBranch);
     }
     public static ast Block(params ast[] nodes) { return ast.Block(nodes); }
 
@@ -60,9 +60,10 @@ namespace DroneFlightPath {
       var x = Mem(_(3));
       var y = Mem(_(4));
       var nObstacles = _(5);
-      var nObstaclesAddr = _(5);
+      var nObstaclesAddr = _(0);
       return Block(
         Mem(nObstaclesAddr, nObstacles), // write to memory
+        Mem(nObstaclesAddr + 1, (nObstacles > 5) | (nObstacles > 4)),
         ret
       );
     }

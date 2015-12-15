@@ -16,12 +16,17 @@ namespace CodeInterpreter.AST {
   }
 
   public enum AstUnaryOp {
+    // arithmetic operations
     Negate,
     Increment,
     Decrement,
+    // logical operations
+    True,
+    False
   }
 
   public enum AstBinaryOp {
+    // arithmetic operations
     Assign,
     Add,
     Sub,
@@ -29,12 +34,15 @@ namespace CodeInterpreter.AST {
     Div,
     Mod,
     Pow,
+    // logical operations
     Eq,
     Neq,
     Lt,
     Lte,
     Gt,
     Gte,
+    And,
+    Or
   }
 
   public enum AstArrayOp {
@@ -133,22 +141,22 @@ namespace CodeInterpreter.AST {
     public static AstNode operator *(int left, AstNode right) {
       return Mul(Constant(left), right);
     }
-    public static AstNode operator |(AstNode left, AstNode right) {
+    public static AstNode operator ==(AstNode left, AstNode right) {
       return Eq(left, right);
     }
-    public static AstNode operator |(AstNode left, int right) {
+    public static AstNode operator ==(AstNode left, int right) {
       return Eq(left, Constant(right));
     }
-    public static AstNode operator |(int left, AstNode right) {
+    public static AstNode operator ==(int left, AstNode right) {
       return Eq(Constant(left), right);
     }
-    public static AstNode operator ^(AstNode left, AstNode right) {
+    public static AstNode operator !=(AstNode left, AstNode right) {
       return Neq(left, right);
     }
-    public static AstNode operator ^(AstNode left, int right) {
+    public static AstNode operator !=(AstNode left, int right) {
       return Neq(left, Constant(right));
     }
-    public static AstNode operator ^(int left, AstNode right) {
+    public static AstNode operator !=(int left, AstNode right) {
       return Neq(Constant(left), right);
     }
     public static AstNode operator <(AstNode left, AstNode right) {
@@ -174,6 +182,12 @@ namespace CodeInterpreter.AST {
     }
     public static AstNode operator >=(AstNode left, AstNode right) {
       return Gte(left, right);
+    }
+    public static AstNode operator &(AstNode left, AstNode right) {
+      return And(left, right);
+    }
+    public static AstNode operator |(AstNode left, AstNode right) {
+      return Or(left, right);
     }
     public static AstNode operator -(AstNode node) {
       return Neg(node);
@@ -274,6 +288,14 @@ namespace CodeInterpreter.AST {
 
     public static AstNode Gte(AstNode left, AstNode right) {
       return new AstBinaryNode(AstBinaryOp.Gte, left, right);
+    }
+
+    public static AstNode And(AstNode left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.And, left, right);
+    }
+
+    public static AstNode Or(AstNode left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.Or, left, right);
     }
 
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
