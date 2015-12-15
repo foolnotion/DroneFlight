@@ -157,20 +157,23 @@ namespace CodeInterpreter.AST {
             return condition.IsLeaf ? count : JumpLocations[condition.Id];
           }
         case AstNodeType.Loop: {
-            var loopNode = (AstLoopNode)node;
-            var condition = loopNode.Condition;
-            var body = loopNode.Body;
-            switch (loopNode.LoopType) {
-              case AstLoopType.While: {
-                  return condition.IsLeaf ? count : JumpLocations[condition.Id];
-                }
-              case AstLoopType.DoWhile: {
-                  return body.IsLeaf ? (condition.IsLeaf ? count : JumpLocations[condition.Id]) : JumpLocations[body.Id];
-                }
-              default:
-                throw new Exception("Unknown loop type.");
-            }
+            // will be fixed later at the moment of evaluation, since there are two cases:
+            // 1) while loop: condition is inserted in the code before the body, therefore the jump location will be the location of condition
+            // 2) do..while loop: body is inserted before condition, therefore the jump location will be the location of body 
+            return -1;
           }
+        //            var loopNode = (AstLoopNode)node;
+        //            var condition = loopNode.Condition;
+        //            var body = loopNode.Body;
+        //            switch (loopNode.LoopType) {
+        //              case AstLoopType.While: {
+        //                  return condition.IsLeaf ? count : JumpLocations[condition.Id];
+        //                }
+        //              case AstLoopType.DoWhile: {
+        //                  return body.IsLeaf ? (condition.IsLeaf ? count : JumpLocations[condition.Id]) : JumpLocations[body.Id];
+        //                }
+        //        default:
+        //          throw new Exception("Unknown loop type.");
         case AstNodeType.Block: {
             var blockNode = (AstBlockNode)node;
             foreach (var child in blockNode.Children)
@@ -559,7 +562,7 @@ namespace CodeInterpreter.AST {
                     Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2)),
                   });
                   Code.AddRange(trueBranchCode); // count + 4
-                  // skip false branch section if condition true, at the end of the execution of the true branch code
+                                                 // skip false branch section if condition true, at the end of the execution of the true branch code
                   Code.AddRange(new[] {
                     Instruction.Lda(Arg.Val(0)),
                     Instruction.Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2 + falseBranchCode.Count)),
@@ -576,16 +579,45 @@ namespace CodeInterpreter.AST {
             var loopNode = (AstLoopNode)node;
             var body = loopNode.Body;
             var condition = loopNode.Condition;
-            var conditionArg = Arg.Mem(MemoryMap.MapObject(condition.Id));
-
+            var conditionArg = Arg.Mem(MemoryMap.MapObject(condition.Id)); // cannot be leaf
             switch (loopNode.LoopType) {
               case AstLoopType.While: {
-                  throw new NotSupportedException("The while loop is currently not supported.");
+                  // need to visit the loop body to calculate the size of the code
+                  // so we create a new visitor, allocate for 1000 variables (won't be used anyway)
+                  var v = new GenerateAsmVisitor(new MemoryMap(0, 1000));
+                  body.Accept(v);
+                  var bodyCount = v.Code.Count;
+                  int jmpCond = count;
+                  condition.Accept(this);
+                  int jmpBody = Code.Count + 4;
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(jmpBody)),
+                    Instruction.Lda(Arg.Val(0)),
+                    Instruction.Jge(Arg.Val(jmpBody + bodyCount))
+                  });
+                  body.Accept(this);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(jmpCond))
+                  });
+                  JumpLocations[condition.Id] = jmpCond;
+                  JumpLocations[body.Id] = jmpBody;
+                  JumpLocations[loopNode.Id] = jmpCond;
+                  break;
                 }
               case AstLoopType.DoWhile: {
+                  int jmpBody = count;
+                  body.Accept(this);
+                  int jmpCond = Code.Count;
+                  condition.Accept(this);
                   Code.AddRange(new[] {
-                Instruction.Lda(conditionArg), Instruction.Jge(Arg.Val(JumpLocations[body.Id]))
+                    Instruction.Lda(conditionArg),
+                    Instruction.Jge(Arg.Val(jmpBody))
                   });
+                  JumpLocations[condition.Id] = jmpCond;
+                  JumpLocations[body.Id] = jmpBody;
+                  JumpLocations[loopNode.Id] = jmpBody;
                   break;
                 }
               default:

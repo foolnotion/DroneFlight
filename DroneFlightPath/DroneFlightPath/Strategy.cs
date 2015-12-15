@@ -1,16 +1,19 @@
 ﻿using ast = CodeInterpreter.AST.AstNode;
 
-
 namespace DroneFlightPath {
   public static class Strategy {
     public static ast _(int v) { return ast.Constant(v); }
     public static ast _(string v, int size = 1) { return ast.Variable(v, size); }
+    public static ast Inc(ast variable) { return ast.Increment(variable); }
+    public static ast Dec(ast variable) { return ast.Decrement(variable); }
     public static ast Mem(ast addr) { return ast.MemoryRead(addr); }
     public static ast Mem(ast addr, ast value) { return ast.MemoryWrite(addr, value); }
     public static ast Set(ast target, ast source) { return ast.Assign(target, source); }
     public static ast If(ast condition, ast trueBranch, ast falseBranch = null) {
       return object.Equals(falseBranch, null) ? ast.IfThen(condition, trueBranch) : ast.IfThenElse(condition, trueBranch, falseBranch);
     }
+    public static ast While(ast condition, ast body) { return ast.While(condition, body); }
+    public static ast Do(ast condition, ast body) { return ast.DoWhile(condition, body); }
     public static ast Block(params ast[] nodes) { return ast.Block(nodes); }
 
     private static readonly ast hold = _(0);
@@ -61,9 +64,23 @@ namespace DroneFlightPath {
       var y = Mem(_(4));
       var nObstacles = _(5);
       var nObstaclesAddr = _(0);
+      var i = _("i");
+      var j = _("j");
       return Block(
-        Mem(nObstaclesAddr, nObstacles), // write to memory
-        Mem(nObstaclesAddr + 1, (nObstacles > 5) | (nObstacles > 4)),
+        While(
+          i < 10,
+          Block(
+            ast.Assign(j, i + 1),
+            While(
+              j < 10,
+              Block(
+                Mem(_(0), Mem(_(0)) + _(1)),
+                Inc(j)
+              )
+            ),
+            Inc(i)
+          )
+        ),
         ret
       );
     }

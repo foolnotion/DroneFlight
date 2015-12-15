@@ -533,10 +533,10 @@ namespace CodeInterpreter.AST {
 
     public override void Accept(AstNodeVisitor visitor) {
       // for the DoWhile loop, the body needs to be executed before the condition
-      if (LoopType == AstLoopType.DoWhile) {
-        Body.Accept(visitor);
-      }
-      Condition.Accept(visitor);
+      //      if (LoopType == AstLoopType.DoWhile) {
+      //        Body.Accept(visitor);
+      //      }
+      //      Condition.Accept(visitor);
       visitor.Visit(this);
     }
 

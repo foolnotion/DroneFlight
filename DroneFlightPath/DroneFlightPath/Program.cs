@@ -25,6 +25,9 @@ namespace DroneFlightPath {
       for (int i = 0; i < genVisitor.Code.Count; ++i) {
         sb.AppendLine($"{genVisitor.Code[i]}");
       }
+
+      //      Console.WriteLine($"i: {genVisitor.MemoryMap["i"]}");
+      //      Console.WriteLine($"j: {genVisitor.MemoryMap["j"]}");
       //      File.WriteAllText(@"C:\\Users\\Bogdan\\Projects\\TechOn2015\\DroneFlightPath\\DroneFlightPath\\TestFile\\07_intoTheDark.txt", sb.ToString());
       var rm = new RegisterMachine();
       rm.LoadIntructions(genVisitor.Code);
