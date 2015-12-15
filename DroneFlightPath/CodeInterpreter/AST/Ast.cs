@@ -91,55 +91,96 @@ namespace CodeInterpreter.AST {
     public static AstNode operator +(AstNode left, AstNode right) {
       return Add(left, right);
     }
-
+    public static AstNode operator +(AstNode left, int right) {
+      return Add(left, Constant(right));
+    }
+    public static AstNode operator +(int left, AstNode right) {
+      return Add(Constant(left), right);
+    }
     public static AstNode operator -(AstNode left, AstNode right) {
       return Sub(left, right);
     }
-
+    public static AstNode operator -(AstNode left, int right) {
+      return Sub(left, Constant(right));
+    }
+    public static AstNode operator -(int left, AstNode right) {
+      return Sub(Constant(left), right);
+    }
     public static AstNode operator /(AstNode left, AstNode right) {
       return Div(left, right);
     }
-
+    public static AstNode operator /(AstNode left, int right) {
+      return Div(left, Constant(right));
+    }
+    public static AstNode operator /(int left, AstNode right) {
+      return Div(Constant(left), right);
+    }
     public static AstNode operator %(AstNode left, AstNode right) {
       return Mod(left, right);
     }
-
+    public static AstNode operator %(AstNode left, int right) {
+      return Mod(left, Constant(right));
+    }
+    public static AstNode operator %(int left, AstNode right) {
+      return Mod(Constant(left), right);
+    }
     public static AstNode operator *(AstNode left, AstNode right) {
       return Mul(left, right);
     }
-
+    public static AstNode operator *(AstNode left, int right) {
+      return Mul(left, Constant(right));
+    }
+    public static AstNode operator *(int left, AstNode right) {
+      return Mul(Constant(left), right);
+    }
     public static AstNode operator |(AstNode left, AstNode right) {
       return Eq(left, right);
     }
-
+    public static AstNode operator |(AstNode left, int right) {
+      return Eq(left, Constant(right));
+    }
+    public static AstNode operator |(int left, AstNode right) {
+      return Eq(Constant(left), right);
+    }
     public static AstNode operator ^(AstNode left, AstNode right) {
       return Neq(left, right);
     }
-
+    public static AstNode operator ^(AstNode left, int right) {
+      return Neq(left, Constant(right));
+    }
+    public static AstNode operator ^(int left, AstNode right) {
+      return Neq(Constant(left), right);
+    }
     public static AstNode operator <(AstNode left, AstNode right) {
       return Lt(left, right);
     }
-
+    public static AstNode operator <(AstNode left, int right) {
+      return Lt(left, Constant(right));
+    }
+    public static AstNode operator <(int left, AstNode right) {
+      return Lt(Constant(left), right);
+    }
     public static AstNode operator >(AstNode left, AstNode right) {
       return Gt(left, right);
     }
-
+    public static AstNode operator >(AstNode left, int right) {
+      return Gt(left, Constant(right));
+    }
+    public static AstNode operator >(int left, AstNode right) {
+      return Gt(Constant(left), right);
+    }
     public static AstNode operator <=(AstNode left, AstNode right) {
       return Lte(left, right);
     }
-
     public static AstNode operator >=(AstNode left, AstNode right) {
       return Gte(left, right);
     }
-
     public static AstNode operator -(AstNode node) {
       return Neg(node);
     }
-
     public static AstNode operator --(AstNode node) {
       return Decrement(node);
     }
-
     public static AstNode operator ++(AstNode node) {
       return Increment(node);
     }
