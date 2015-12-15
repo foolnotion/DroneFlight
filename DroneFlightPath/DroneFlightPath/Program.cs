@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CodeInterpreter;
@@ -16,7 +17,7 @@ namespace DroneFlightPath {
 
     static void Main(string[] args) {
       var sb = new StringBuilder();
-      var block = Strategy.BasicStrategy();
+      var block = Strategy.Test();
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
@@ -29,6 +30,10 @@ namespace DroneFlightPath {
       var rm = new RegisterMachine();
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
+
+      for (int i = 0; i < 30; ++i) {
+        Console.WriteLine($"Mem[{i}]: {rm.Memory[i]}");
+      }
     }
   }
 }

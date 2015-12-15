@@ -6,19 +6,19 @@ namespace CodeInterpreter.AST {
     Block,
     Constant,
     Variable,
-    Pointer,
     BinaryOp,
     UnaryOp,
     Loop,
     Conditional,
     ArrayAccess,
+    MemoryAccess,
     Return
   }
 
   public enum AstUnaryOp {
     Negate,
     Increment,
-    Decrement
+    Decrement,
   }
 
   public enum AstBinaryOp {
@@ -40,6 +40,11 @@ namespace CodeInterpreter.AST {
   public enum AstArrayOp {
     GetIndex,
     SetIndex
+  }
+
+  public enum AstMemoryOp {
+    Read,
+    Write
   }
 
   public enum AstConditionalOp {
@@ -141,16 +146,24 @@ namespace CodeInterpreter.AST {
     #endregion
 
     #region factory methods
+    public static AstNode MemoryWrite(AstNode address, AstNode value) {
+      return new AstMemoryAccessNode(AstMemoryOp.Write, address, value);
+    }
+
+    public static AstNode MemoryRead(AstNode address) {
+      return new AstMemoryAccessNode(AstMemoryOp.Read, address);
+    }
+
     public static AstNode ArraySet(AstNode array, AstNode index, AstNode value) {
       if (array.Type != AstNodeType.Variable)
         throw new ArgumentException("Array argument should be of type Variable.");
-      return new ArrayAccessAstNode(AstArrayOp.SetIndex, array, index, value);
+      return new AstArrayAccessNode(AstArrayOp.SetIndex, array, index, value);
     }
 
     public static AstNode ArrayGet(AstNode array, AstNode index) {
       if (array.Type != AstNodeType.Variable)
         throw new ArgumentException("Array argument should be of type Variable.");
-      return new ArrayAccessAstNode(AstArrayOp.GetIndex, array, index);
+      return new AstArrayAccessNode(AstArrayOp.GetIndex, array, index);
     }
 
     public static AstNode Return() {
@@ -161,101 +174,97 @@ namespace CodeInterpreter.AST {
       return new AstBlockNode(children);
     }
 
-    public static AstNode Pointer(int value) {
-      return new PointerAstNode(value);
-    }
-
     public static AstNode Constant(int value) {
-      return new ConstantAstNode(value);
+      return new AstConstantNode(value);
     }
 
     public static AstNode Variable(string name, int size = 1) {
-      return new VariableAstNode(name, size);
+      return new AstVariableNode(name, size);
     }
     public static AstNode Assign(AstNode left, AstNode right) {
-      if (left.Type != AstNodeType.Variable && left.Type != AstNodeType.Pointer)
-        throw new ArgumentException("Assignment target (left argument) should be a variable or a pointer.");
-      return new BinaryAstNode(AstBinaryOp.Assign, left, right);
+      //      if (left.Type != AstNodeType.Variable)
+      //        throw new ArgumentException("Assignment target (left argument) should be a variable.");
+      return new AstBinaryNode(AstBinaryOp.Assign, left, right);
     }
 
     public static AstNode Add(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Add, left, right);
+      return new AstBinaryNode(AstBinaryOp.Add, left, right);
     }
 
     public static AstNode Sub(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Sub, left, right);
+      return new AstBinaryNode(AstBinaryOp.Sub, left, right);
     }
 
     public static AstNode Mul(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Mul, left, right);
+      return new AstBinaryNode(AstBinaryOp.Mul, left, right);
     }
 
     public static AstNode Div(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Div, left, right);
+      return new AstBinaryNode(AstBinaryOp.Div, left, right);
     }
 
     public static AstNode Mod(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Mod, left, right);
+      return new AstBinaryNode(AstBinaryOp.Mod, left, right);
     }
 
     public static AstNode Pow(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Pow, left, right);
+      return new AstBinaryNode(AstBinaryOp.Pow, left, right);
     }
 
     public static AstNode Eq(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Eq, left, right);
+      return new AstBinaryNode(AstBinaryOp.Eq, left, right);
     }
 
     public static AstNode Neq(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Neq, left, right);
+      return new AstBinaryNode(AstBinaryOp.Neq, left, right);
     }
 
     public static AstNode Lt(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Lt, left, right);
+      return new AstBinaryNode(AstBinaryOp.Lt, left, right);
     }
 
     public static AstNode Gt(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Gt, left, right);
+      return new AstBinaryNode(AstBinaryOp.Gt, left, right);
     }
 
     public static AstNode Lte(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Lte, left, right);
+      return new AstBinaryNode(AstBinaryOp.Lte, left, right);
     }
 
     public static AstNode Gte(AstNode left, AstNode right) {
-      return new BinaryAstNode(AstBinaryOp.Gte, left, right);
+      return new AstBinaryNode(AstBinaryOp.Gte, left, right);
     }
 
     public static AstNode IfThen(AstNode condition, AstNode trueBranch) {
-      return new ConditionalAstNode(AstConditionalOp.IfThen, condition, trueBranch, null);
+      return new AstConditionalNode(AstConditionalOp.IfThen, condition, trueBranch, null);
     }
 
     public static AstNode IfThenElse(AstNode condition, AstNode trueBranch, AstNode falseBranch) {
-      return new ConditionalAstNode(AstConditionalOp.IfThenElse, condition, trueBranch, falseBranch);
+      return new AstConditionalNode(AstConditionalOp.IfThenElse, condition, trueBranch, falseBranch);
     }
 
     public static AstNode While(AstNode condition, AstNode body) {
-      return new LoopAstNode(AstLoopType.While, condition, body);
+      return new AstLoopNode(AstLoopType.While, condition, body);
     }
 
     public static AstNode DoWhile(AstNode condition, AstNode body) {
-      return new LoopAstNode(AstLoopType.DoWhile, condition, body);
+      return new AstLoopNode(AstLoopType.DoWhile, condition, body);
     }
 
     public static AstNode Neg(AstNode arg) {
-      return new UnaryAstNode(AstUnaryOp.Negate, arg);
+      return new AstUnaryNode(AstUnaryOp.Negate, arg);
     }
 
     public static AstNode Increment(AstNode arg) {
       if (arg.Type != AstNodeType.Variable)
         throw new ArgumentException("Increment operations can only be applied to variables.");
-      return new UnaryAstNode(AstUnaryOp.Increment, arg);
+      return new AstUnaryNode(AstUnaryOp.Increment, arg);
     }
 
     public static AstNode Decrement(AstNode arg) {
       if (arg.Type != AstNodeType.Variable)
         throw new ArgumentException("Decrement operations can only be applied to variables.");
-      return new UnaryAstNode(AstUnaryOp.Decrement, arg);
+      return new AstUnaryNode(AstUnaryOp.Decrement, arg);
     }
 
     #endregion
@@ -297,10 +306,10 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class ConstantAstNode : AstNode {
+  public class AstConstantNode : AstNode {
     public int Value { get; }
 
-    internal ConstantAstNode(int value) : base(AstNodeType.Constant, "ConstantAstNode", true) {
+    internal AstConstantNode(int value) : base(AstNodeType.Constant, "AstConstantNode", true) {
       Value = value;
     }
 
@@ -313,28 +322,11 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class PointerAstNode : AstNode {
-    // points to a memory address
-    public int Value { get; }
-
-    internal PointerAstNode(int value) : base(AstNodeType.Pointer, "PointerAstNode", true) {
-      Value = value;
-    }
-
-    public override void Accept(AstNodeVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public override string ToString() {
-      return $"[{Value}]";
-    }
-  }
-
-  public class VariableAstNode : AstNode {
+  public class AstVariableNode : AstNode {
     public string VariableName { get; }
     public int Size { get; } // size is 1 by default
 
-    internal VariableAstNode(string variableName, int size = 1) : base(AstNodeType.Variable, "VariableAstNode", true) {
+    internal AstVariableNode(string variableName, int size = 1) : base(AstNodeType.Variable, "AstVariableNode", true) {
       VariableName = variableName;
       Size = size;
     }
@@ -348,7 +340,30 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class ArrayAccessAstNode : AstNode {
+  public class AstMemoryAccessNode : AstNode {
+    public AstMemoryOp Op { get; }
+    public AstNode Address { get; }
+    public AstNode Value { get; }
+
+    public override void Accept(AstNodeVisitor visitor) {
+      Address.Accept(visitor);
+      Value?.Accept(visitor);
+      visitor.Visit(this);
+    }
+
+    internal AstMemoryAccessNode(AstMemoryOp op, AstNode address, AstNode value = null) : base(AstNodeType.MemoryAccess, "AstMemoryAccessNode", false) {
+      Op = op;
+      Address = address;
+      Value = value;
+    }
+
+    public override string ToString() {
+      var v = Value?.ToString() ?? "";
+      return $"{Op}({Address} {Address} {v})";
+    }
+  }
+
+  public class AstArrayAccessNode : AstNode {
     public AstArrayOp Op { get; }
     public AstNode Array { get; }
     public AstNode Index { get; }
@@ -363,10 +378,10 @@ namespace CodeInterpreter.AST {
 
     public override string ToString() {
       var v = Value?.ToString() ?? "";
-      return $"{Op}({((VariableAstNode)Array).VariableName} {Index} {v})";
+      return $"{Op}({((AstVariableNode)Array).VariableName} {Index} {v})";
     }
 
-    public ArrayAccessAstNode(AstArrayOp op, AstNode array, AstNode index, AstNode value = null) : base(AstNodeType.ArrayAccess, "ArrayAccessAstNode", false) {
+    internal AstArrayAccessNode(AstArrayOp op, AstNode array, AstNode index, AstNode value = null) : base(AstNodeType.ArrayAccess, "AstArrayAccessNode", false) {
       Op = op;
       Array = array;
       Index = index;
@@ -374,11 +389,11 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class UnaryAstNode : AstNode {
+  public class AstUnaryNode : AstNode {
     public AstUnaryOp Op { get; }
     public AstNode Arg { get; }
 
-    internal UnaryAstNode(AstUnaryOp op, AstNode arg) : base(AstNodeType.UnaryOp, "UnaryAstNode", false) {
+    internal AstUnaryNode(AstUnaryOp op, AstNode arg) : base(AstNodeType.UnaryOp, "AstUnaryNode", false) {
       Op = op;
       Arg = arg;
     }
@@ -393,13 +408,13 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class BinaryAstNode : AstNode {
+  public class AstBinaryNode : AstNode {
     public AstBinaryOp Op { get; }
     public AstNode Left { get; }
     public AstNode Right { get; }
 
-    internal BinaryAstNode(AstBinaryOp op, AstNode left, AstNode right)
-      : base(AstNodeType.BinaryOp, "BinaryAstNode", false) {
+    internal AstBinaryNode(AstBinaryOp op, AstNode left, AstNode right)
+      : base(AstNodeType.BinaryOp, "AstBinaryNode", false) {
       Op = op;
       Left = left;
       Right = right;
@@ -416,14 +431,14 @@ namespace CodeInterpreter.AST {
     }
   }
 
-  public class ConditionalAstNode : AstNode {
+  public class AstConditionalNode : AstNode {
     public AstConditionalOp Op { get; }
     public AstNode Condition { get; }
     public AstNode TrueBranch { get; }
     public AstNode FalseBranch { get; }
 
-    internal ConditionalAstNode(AstConditionalOp op, AstNode condition, AstNode trueBranch, AstNode falseBranch)
-      : base(AstNodeType.Conditional, "ConditionalAstNode", false) {
+    internal AstConditionalNode(AstConditionalOp op, AstNode condition, AstNode trueBranch, AstNode falseBranch)
+      : base(AstNodeType.Conditional, "AstConditionalNode", false) {
       Op = op;
       Condition = condition;
       TrueBranch = trueBranch;
@@ -441,13 +456,13 @@ namespace CodeInterpreter.AST {
   }
 
   // execute body as long as condition is true
-  public class LoopAstNode : AstNode {
+  public class AstLoopNode : AstNode {
     public AstLoopType LoopType { get; }
     public AstNode Condition { get; }
     public AstNode Body { get; }
 
-    internal LoopAstNode(AstLoopType loopType, AstNode condition, AstNode body)
-      : base(AstNodeType.Loop, "LoopAstNode", false) {
+    internal AstLoopNode(AstLoopType loopType, AstNode condition, AstNode body)
+      : base(AstNodeType.Loop, "AstLoopNode", false) {
       Condition = condition;
       Body = body;
       LoopType = loopType;

@@ -63,7 +63,7 @@ namespace CodeInterpreter.AST {
     public override void Visit(AstNode node) {
       if (node.Type == AstNodeType.Constant)
         return;
-      var variable = node as VariableAstNode;
+      var variable = node as AstVariableNode;
       if (variable == null) {
         MemoryMap.MapObject(node.Id);
       } else {
@@ -93,16 +93,12 @@ namespace CodeInterpreter.AST {
         throw new ArgumentException($"Provided argument {leaf.Name} is not a leaf node.");
       switch (leaf.Type) {
         case AstNodeType.Constant: {
-            return Arg.Val(((ConstantAstNode)leaf).Value);
+            return Arg.Val(((AstConstantNode)leaf).Value);
           }
         case AstNodeType.Variable: {
-            var variableNode = (VariableAstNode)leaf;
+            var variableNode = (AstVariableNode)leaf;
             var addr = MemoryMap.MapObject(variableNode.VariableName);
             return Arg.Mem(addr);
-          }
-        case AstNodeType.Pointer: {
-            var pointerNode = (PointerAstNode)leaf;
-            return Arg.Mem(pointerNode.Value);
           }
         default:
           throw new ArgumentException("Unknown leaf node type.");
@@ -116,18 +112,33 @@ namespace CodeInterpreter.AST {
         case AstNodeType.Return: {
             return -1;
           }
+        case AstNodeType.MemoryAccess: {
+            var memoryAccessNode = (AstMemoryAccessNode)node;
+            var addr = memoryAccessNode.Address;
+            var value = memoryAccessNode.Value;
+            if (value == null)
+              return addr.IsLeaf ? count : JumpLocations[addr.Id];
+            if (addr.IsLeaf && value.IsLeaf)
+              return count;
+            if (addr.IsLeaf)
+              return JumpLocations[value.Id];
+            return JumpLocations[addr.Id];
+          }
         case AstNodeType.ArrayAccess: {
-            var arrayAccessNode = (ArrayAccessAstNode)node;
+            var arrayAccessNode = (AstArrayAccessNode)node;
             // do not consider the array param since it should always be a leaf (type: Variable)
             var index = arrayAccessNode.Index;
             var value = arrayAccessNode.Value;
-            if (index.IsLeaf && value.IsLeaf) return count;
+            if (value == null)
+              return index.IsLeaf ? count : JumpLocations[index.Id];
+            if (index.IsLeaf && value.IsLeaf)
+              return count;
             if (index.IsLeaf)
               return JumpLocations[value.Id];
             return JumpLocations[index.Id];
           }
         case AstNodeType.BinaryOp: {
-            var binaryOpNode = (BinaryAstNode)node;
+            var binaryOpNode = (AstBinaryNode)node;
             var left = binaryOpNode.Left;
             var right = binaryOpNode.Right;
             if (left.IsLeaf && right.IsLeaf) return count;
@@ -136,17 +147,17 @@ namespace CodeInterpreter.AST {
             return JumpLocations[left.Id];
           }
         case AstNodeType.UnaryOp: {
-            var unaryOpNode = (UnaryAstNode)node;
+            var unaryOpNode = (AstUnaryNode)node;
             var arg = unaryOpNode.Arg;
             return arg.IsLeaf ? count : JumpLocations[arg.Id];
           }
         case AstNodeType.Conditional: {
-            var conditionalNode = (ConditionalAstNode)node;
+            var conditionalNode = (AstConditionalNode)node;
             var condition = conditionalNode.Condition;
             return condition.IsLeaf ? count : JumpLocations[condition.Id];
           }
         case AstNodeType.Loop: {
-            var loopNode = (LoopAstNode)node;
+            var loopNode = (AstLoopNode)node;
             var condition = loopNode.Condition;
             var body = loopNode.Body;
             switch (loopNode.LoopType) {
@@ -185,8 +196,39 @@ namespace CodeInterpreter.AST {
             Code.Add(Instruction.Hlt());
             break;
           }
+        case AstNodeType.MemoryAccess: {
+            var memoryAccessNode = (AstMemoryAccessNode)node;
+            var addr = memoryAccessNode.Address;
+            var addrArg = addr.IsLeaf ? LeafToArg(addr) : Arg.Mem(MemoryMap[addr.Id]);
+            switch (memoryAccessNode.Op) {
+              case AstMemoryOp.Read: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(addrArg),       // load address into accumulator
+                    Instruction.Ldn(Arg.A(false)),  // set N register
+                    Instruction.Lda(Arg.N(true)),   // load value from memory
+                    Instruction.Sta(resultAddrArg)  // store result
+                  });
+                  break;
+                }
+              case AstMemoryOp.Write: {
+                  var value = memoryAccessNode.Value;
+                  var valueArg = value.IsLeaf ? LeafToArg(value) : Arg.Mem(MemoryMap[value.Id]);
+                  Code.AddRange(new[] {
+                    Instruction.Lda(addrArg),       // load address into accumulator
+                    Instruction.Ldn(Arg.A(false)),  // set N register
+                    Instruction.Lda(valueArg),      // load value into accumulator
+                    Instruction.Sta(Arg.N(true)),   // set new value in memory
+                    Instruction.Sta(resultAddrArg)  // store result
+                  });
+                  break;
+                }
+              default:
+                throw new Exception("Unknown memory operation.");
+            }
+            break;
+          }
         case AstNodeType.ArrayAccess: {
-            var arrayAccessNode = (ArrayAccessAstNode)node;
+            var arrayAccessNode = (AstArrayAccessNode)node;
             var array = arrayAccessNode.Array;
             var index = arrayAccessNode.Index;
             var arrayArg = Arg.Val(LeafToArg(array).Value); // take the address and convert it into a value so we can add the offset
@@ -219,8 +261,34 @@ namespace CodeInterpreter.AST {
             }
             break;
           }
+        case AstNodeType.UnaryOp: {
+            var unaryOpNode = (AstUnaryNode)node;
+            var unaryArg = unaryOpNode.Arg;
+            var unaryArgAddr = unaryArg.IsLeaf ? LeafToArg(unaryArg) : Arg.Mem(MemoryMap[unaryArg.Id]);
+            switch (unaryOpNode.Op) {
+              case AstUnaryOp.Increment: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(unaryArgAddr),
+                    Instruction.Adda(Arg.Val(1)),
+                    Instruction.Sta(unaryArgAddr),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+              case AstUnaryOp.Decrement: {
+                  Code.AddRange(new[] {
+                    Instruction.Lda(unaryArgAddr),
+                    Instruction.Suba(Arg.Val(1)),
+                    Instruction.Sta(unaryArgAddr),
+                    Instruction.Sta(resultAddrArg)
+                  });
+                  break;
+                }
+            }
+          }
+          break;
         case AstNodeType.BinaryOp: {
-            var binaryOpNode = (BinaryAstNode)node;
+            var binaryOpNode = (AstBinaryNode)node;
             var left = binaryOpNode.Left;
             var right = binaryOpNode.Right;
             var leftArg = left.IsLeaf ? LeafToArg(left) : Arg.Mem(MemoryMap[left.Id]);
@@ -228,11 +296,9 @@ namespace CodeInterpreter.AST {
             #region binary operation switch
             switch (binaryOpNode.Op) {
               case AstBinaryOp.Assign: {
-                  Code.AddRange(new[] {
-                    Instruction.Lda(rightArg),
-                    Instruction.Sta(leftArg),      // left arg should be variable or binaryop of type index
-                    Instruction.Sta(resultAddrArg) // intermediate result for assign node
-                  });
+                  Code.Add(Instruction.Lda(rightArg));
+                  Code.Add(Instruction.Sta(leftArg));
+                  Code.Add(Instruction.Sta(resultAddrArg));
                   break;
                 }
               case AstBinaryOp.Add: {
@@ -415,7 +481,7 @@ namespace CodeInterpreter.AST {
           }
         case AstNodeType.Conditional: {
             var childVisitor = new GenerateAsmVisitor(MemoryMap);
-            var conditionalNode = (ConditionalAstNode)node;
+            var conditionalNode = (AstConditionalNode)node;
             conditionalNode.TrueBranch.Accept(childVisitor);
             var trueBranchCode = childVisitor.Code.ToList();
             var conditionArg = Arg.Mem(MemoryMap.MapObject(conditionalNode.Condition.Id));
@@ -456,7 +522,7 @@ namespace CodeInterpreter.AST {
             break;
           }
         case AstNodeType.Loop: {
-            var loopNode = (LoopAstNode)node;
+            var loopNode = (AstLoopNode)node;
             var body = loopNode.Body;
             var condition = loopNode.Condition;
             var conditionArg = Arg.Mem(MemoryMap.MapObject(condition.Id));
@@ -477,32 +543,6 @@ namespace CodeInterpreter.AST {
             }
             break;
           }
-        case AstNodeType.UnaryOp: {
-            var unaryOpNode = (UnaryAstNode)node;
-            var unaryArg = unaryOpNode.Arg;
-            var unaryArgAddr = unaryArg.IsLeaf ? LeafToArg(unaryArg) : Arg.Mem(MemoryMap[unaryArg.Id]);
-            switch (unaryOpNode.Op) {
-              case AstUnaryOp.Increment: {
-                  Code.AddRange(new[] {
-                    Instruction.Lda(unaryArgAddr),
-                    Instruction.Adda(Arg.Val(1)),
-                    Instruction.Sta(unaryArgAddr),
-                    Instruction.Sta(resultAddrArg)
-                  });
-                  break;
-                }
-              case AstUnaryOp.Decrement: {
-                  Code.AddRange(new[] {
-                    Instruction.Lda(unaryArgAddr),
-                    Instruction.Suba(Arg.Val(1)),
-                    Instruction.Sta(unaryArgAddr),
-                    Instruction.Sta(resultAddrArg)
-                  });
-                  break;
-                }
-            }
-          }
-          break;
         default:
           throw new Exception("Unknown AST node type.");
       }
