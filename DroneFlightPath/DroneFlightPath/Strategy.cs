@@ -6,7 +6,7 @@ namespace DroneFlightPath {
     public static ast _(int v) { return ast.Constant(v); }
     public static ast _(string v, int size = 1) { return ast.Variable(v, size); }
     public static ast Mem(int v) { return ast.Pointer(v); }
-    public static ast Set(ast left, ast right) { return ast.Assign(left, right); }
+    public static ast Set(ast target, ast source) { return ast.Assign(target, source); }
     public static ast If(ast condition, ast trueBranch, ast falseBranch = null) {
       return falseBranch == null ? ast.IfThen(condition, trueBranch) : ast.IfThenElse(condition, trueBranch, falseBranch);
     }
