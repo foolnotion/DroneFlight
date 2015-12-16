@@ -108,75 +108,6 @@ namespace CodeInterpreter.AST {
       }
     }
 
-    private int CalculateJumpLocation(AstNode node) {
-      if (node.IsLeaf) return -1;
-      var count = Code.Count;
-      switch (node.Type) {
-        case AstNodeType.Return: {
-            return -1;
-          }
-        case AstNodeType.MemoryAccess: {
-            var memoryAccessNode = (AstMemoryAccessNode)node;
-            var addr = memoryAccessNode.Address;
-            var value = memoryAccessNode.Value;
-            if (object.Equals(value, null))
-              return addr.IsLeaf ? count : JumpLocations[addr.Id];
-            if (addr.IsLeaf && value.IsLeaf)
-              return count;
-            if (addr.IsLeaf)
-              return JumpLocations[value.Id];
-            return JumpLocations[addr.Id];
-          }
-        case AstNodeType.ArrayAccess: {
-            var arrayAccessNode = (AstArrayAccessNode)node;
-            // do not consider the array param since it should always be a leaf (type: Variable)
-            var index = arrayAccessNode.Index;
-            var value = arrayAccessNode.Value;
-            if (object.Equals(value, null))
-              return index.IsLeaf ? count : JumpLocations[index.Id];
-            if (index.IsLeaf && value.IsLeaf)
-              return count;
-            if (index.IsLeaf)
-              return JumpLocations[value.Id];
-            return JumpLocations[index.Id];
-          }
-        case AstNodeType.BinaryOp: {
-            var binaryOpNode = (AstBinaryNode)node;
-            var left = binaryOpNode.Left;
-            var right = binaryOpNode.Right;
-            if (left.IsLeaf && right.IsLeaf) return count;
-            if (left.IsLeaf)
-              return JumpLocations[right.Id];
-            return JumpLocations[left.Id];
-          }
-        case AstNodeType.UnaryOp: {
-            var unaryOpNode = (AstUnaryNode)node;
-            var arg = unaryOpNode.Arg;
-            return arg.IsLeaf ? count : JumpLocations[arg.Id];
-          }
-        case AstNodeType.Conditional: {
-            var conditionalNode = (AstConditionalNode)node;
-            var condition = conditionalNode.Condition;
-            return condition.IsLeaf ? count : JumpLocations[condition.Id];
-          }
-        case AstNodeType.Loop: {
-            // will be fixed later at the moment of evaluation, since there are two cases:
-            // 1) while loop: condition is inserted in the code before the body, therefore the jump location will be the location of condition
-            // 2) do..while loop: body is inserted before condition, therefore the jump location will be the location of body 
-            return -1;
-          }
-        case AstNodeType.Block: {
-            var blockNode = (AstBlockNode)node;
-            foreach (var child in blockNode.Children)
-              if (!child.IsLeaf)
-                return JumpLocations[child.Id];
-            return count;
-          }
-        default:
-          throw new ArgumentException("Unknown loop type.");
-      }
-    }
-
     public void GenerateAsm(AstNode node) {
       var resultAddr = MemoryMap.MapObject(node.Id);
       var resultAddrArg = Arg.Mem(resultAddr);
@@ -568,7 +499,7 @@ namespace CodeInterpreter.AST {
                     Lda(Arg.Val(0)),
                     Jge(Arg.Val(count + 4 + trueBranchCode.Count)),
                   });
-                  Code.AddRange(trueBranchCode);
+                  conditionalNode.TrueBranch.Accept(this);
                   break;
                 }
               case AstConditionalOp.IfThenElse: {
@@ -582,13 +513,13 @@ namespace CodeInterpreter.AST {
                     // if condition false, jump over true branch code section
                     Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2)),
                   });
-                  Code.AddRange(trueBranchCode); // count + 4
-                                                 // skip false branch section if condition true, at the end of the execution of the true branch code
+                  conditionalNode.TrueBranch.Accept(this); // count + 4
+                  // skip false branch section if condition true, at the end of the execution of the true branch code
                   Code.AddRange(new[] {
                     Lda(Arg.Val(0)),
                     Jge(Arg.Val(count + 4 + trueBranchCode.Count + 2 + falseBranchCode.Count)),
                   });
-                  Code.AddRange(falseBranchCode);  // count + 4 + trueBranch.Count + 2
+                  conditionalNode.FalseBranch.Accept(this); // count + 4 + trueBranch.Count + 2
                   break;
                 }
               default:
@@ -654,7 +585,6 @@ namespace CodeInterpreter.AST {
     public override void Visit(AstNode node) {
       if (node.IsLeaf) return;
       NodeNames[node.Id] = node.ToString();
-      JumpLocations[node.Id] = CalculateJumpLocation(node);
       GenerateAsm(node);
     }
   }
