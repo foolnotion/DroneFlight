@@ -78,6 +78,8 @@ namespace DroneFlightPath {
       var obstacleStartMemoryIndex = _(8);
       var citizenStartMemoryIndex = _("citizenStartMemoryIndex");
       var droneStartMemoryIndex = _("droneStartMemoryIndex");
+      ast min = _("min"), left = _("left"), right = _("right"), down = _("down"), up = _("up"); // for the 4 squares surrounding the current position
+      ast cxMinus1 = _("cxMinus1"), cxPlus1 = _("cxPlus1"), cyMinus1 = _("cyMinus1"), cyPlus1 = _("cyPlus1");
 
       var citizenNumericMapValue = _(2500);
       var droneNumericMapValue = _(2500);
@@ -95,29 +97,29 @@ namespace DroneFlightPath {
         // assign values to the surrounding squares(left, right, up, down) as the L1 distance
         Assign(dx, Abs(CurrentX - TargetX)),
         Assign(dy, Abs(CurrentY - TargetY)),
-        Assign(_("cxMinus1"), CurrentX - 1),
-        Assign(_("cxPlus1"), CurrentX + 1),
-        Assign(_("cyMinus1"), CurrentY - 1),
-        Assign(_("cyPlus1"), CurrentY + 1),
-        Assign(_("left"), _(2500)),
-        Assign(_("right"), _(2500)),
-        Assign(_("up"), _(2500)),
-        Assign(_("down"), _(2500)),
+        Assign(cxMinus1, CurrentX - 1),
+        Assign(cxPlus1, CurrentX + 1),
+        Assign(cyMinus1, CurrentY - 1),
+        Assign(cyPlus1, CurrentY + 1),
+        Assign(left, _(2500)),
+        Assign(right, _(2500)),
+        Assign(up, _(2500)),
+        Assign(down, _(2500)),
         If(CurrentX > 0, _(
-          Assign(_("left"), dy + Abs(_("cxMinus1") - TargetX)),
-          ArraySet(currentMap, _("cxMinus1") * NumberOfMapColumns + CurrentY, _("left"))
+          Assign(left, dy + Abs(cxMinus1 - TargetX)),
+          ArraySet(currentMap, cxMinus1 * NumberOfMapColumns + CurrentY, left)
         )),
         If(CurrentY > 0, _(
-          Assign(_("up"), dx + Abs(_("cyMinus1") - TargetY)),
-          ArraySet(currentMap, CurrentX * NumberOfMapColumns + _("_cyMinus1"), _("up"))
+          Assign(up, dx + Abs(cyMinus1 - TargetY)),
+          ArraySet(currentMap, CurrentX * NumberOfMapColumns + cyMinus1, up)
         )),
-        If(_("cxPlus1") < NumberOfMapColumns, _(
-          Assign(_("right"), dy + Abs(_("cxPlus1") - TargetX)),
-          ArraySet(currentMap, _("cxPlus1") * NumberOfMapColumns + CurrentY, _("right"))
+        If(cxPlus1 < NumberOfMapColumns, _(
+          Assign(right, dy + Abs(cxPlus1 - TargetX)),
+          ArraySet(currentMap, cxPlus1 * NumberOfMapColumns + CurrentY, right)
         )),
-        If(_("cyPlus1") < NumberOfMapRows, _(
-          Assign(_("down"), dx + Abs(_("cyPlus1") - TargetY)),
-          ArraySet(currentMap, CurrentX * NumberOfMapColumns + _("cyPlus1"), _("down"))
+        If(cyPlus1 < NumberOfMapRows, _(
+          Assign(down, dx + Abs(cyPlus1 - TargetY)),
+          ArraySet(currentMap, CurrentX * NumberOfMapColumns + cyPlus1, down)
         ))
       );
 
@@ -169,36 +171,36 @@ namespace DroneFlightPath {
       var chooseDirection = _(
         // all values set, now make moves based on manhattan distance
         If(CurrentX > 0, _(
-          Assign(_("left"), ArrayGet(currentMap, _("cxMinus1") * NumberOfMapColumns + CurrentY))
+          Assign(left, ArrayGet(currentMap, cxMinus1 * NumberOfMapColumns + CurrentY))
         )),
         If(CurrentY > 0, _(
-          Assign(_("up"), ArrayGet(currentMap, CurrentX * NumberOfMapColumns + _("_cyMinus1")))
+          Assign(up, ArrayGet(currentMap, CurrentX * NumberOfMapColumns + cyMinus1))
         )),
         If(CurrentX < NumberOfMapColumns - 1, _(
-          Assign(_("right"), ArrayGet(currentMap, _("cxPlus1") * NumberOfMapColumns + CurrentY))
+          Assign(right, ArrayGet(currentMap, cxPlus1 * NumberOfMapColumns + CurrentY))
         )),
         If(CurrentY < NumberOfMapRows - 1, _(
-          Assign(_("down"), ArrayGet(currentMap, CurrentX * NumberOfMapColumns + _("cyPlus1")))
+          Assign(down, ArrayGet(currentMap, CurrentX * NumberOfMapColumns + cyPlus1))
         )),
       // pick square with lowest value as next move
-        Assign(_("min"), Min(_("left"), _("right"), _("up"), _("down"))),
-        If(_("min") == 2500, _(
+        Assign(min, Min(left, right, up, down)),
+        If(min == 2500, _(
           Mem(_(0), Hold),
           Ret
         )),
-        If(_("left") == _("min") & CurrentX > 0, _(
+        If(left == min & CurrentX > 0, _(
           Mem(_(0), Left),
           Ret
         )),
-        If(_("right") == _("min") & _("cxPlus1") < NumberOfMapColumns, _(
+        If(right == min & cxPlus1 < NumberOfMapColumns, _(
           Mem(_(0), Right),
           Ret
         )),
-        If(_("up") == _("min") & CurrentY > 0, _(
+        If(up == min & CurrentY > 0, _(
           Mem(_(0), Up),
           Ret
         )),
-        If(_("down") == _("min") & _("cyPlus1") < NumberOfMapRows, _(
+        If(down == min & cyPlus1 < NumberOfMapRows, _(
           Mem(_(0), Down),
           Ret
         )),
