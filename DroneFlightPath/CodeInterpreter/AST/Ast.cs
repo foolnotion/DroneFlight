@@ -34,6 +34,8 @@ namespace CodeInterpreter.AST {
     Div,
     Mod,
     Pow,
+    Min,
+    Max,
     // logical operations
     Eq,
     Neq,
@@ -76,8 +78,29 @@ namespace CodeInterpreter.AST {
   }
 
   public abstract class AstNode {
+    protected bool Equals(AstNode other) {
+      return Type == other.Type && string.Equals(Id, other.Id) && string.Equals(Name, other.Name) && IsLeaf == other.IsLeaf;
+    }
+
+    public override bool Equals(object obj) {
+      if (ReferenceEquals(null, obj)) return false;
+      if (ReferenceEquals(this, obj)) return true;
+      if (obj.GetType() != this.GetType()) return false;
+      return Equals((AstNode)obj);
+    }
+
+    public override int GetHashCode() {
+      unchecked {
+        var hashCode = (int)Type;
+        hashCode = (hashCode * 397) ^ (Id?.GetHashCode() ?? 0);
+        hashCode = (hashCode * 397) ^ (Name?.GetHashCode() ?? 0);
+        hashCode = (hashCode * 397) ^ IsLeaf.GetHashCode();
+        return hashCode;
+      }
+    }
+
     private AstNode() { }
-    public AstNodeType Type { get; private set; }
+    public AstNodeType Type { get; }
 
     protected AstNode(AstNodeType type, string name, bool isLeaf) {
       Type = type;
@@ -95,7 +118,6 @@ namespace CodeInterpreter.AST {
     public static AstNode operator <<(AstNode left, int value) {
       return Assign(left, AstNode.Constant(value));
     }
-
     public static AstNode operator +(AstNode left, AstNode right) {
       return Add(left, right);
     }
@@ -240,6 +262,14 @@ namespace CodeInterpreter.AST {
       //      if (left.Type != AstNodeType.Variable)
       //        throw new ArgumentException("Assignment target (left argument) should be a variable.");
       return new AstBinaryNode(AstBinaryOp.Assign, left, right);
+    }
+
+    public static AstNode Min(AstNode left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.Min, left, right);
+    }
+
+    public static AstNode Max(AstNode left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.Max, left, right);
     }
 
     public static AstNode Add(AstNode left, AstNode right) {
@@ -532,11 +562,6 @@ namespace CodeInterpreter.AST {
     }
 
     public override void Accept(AstNodeVisitor visitor) {
-      // for the DoWhile loop, the body needs to be executed before the condition
-      //      if (LoopType == AstLoopType.DoWhile) {
-      //        Body.Accept(visitor);
-      //      }
-      //      Condition.Accept(visitor);
       visitor.Visit(this);
     }
 

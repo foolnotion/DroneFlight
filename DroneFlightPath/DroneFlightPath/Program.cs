@@ -21,25 +21,38 @@ namespace DroneFlightPath {
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
       block.Accept(genVisitor);
-      sb.Clear();
-      for (int i = 0; i < genVisitor.Code.Count; ++i) {
-        sb.AppendLine($"{genVisitor.Code[i]}");
-      }
 
-      //      Console.WriteLine($"i: {genVisitor.MemoryMap["i"]}");
-      //      Console.WriteLine($"j: {genVisitor.MemoryMap["j"]}");
-      //      File.WriteAllText(@"C:\\Users\\Bogdan\\Projects\\TechOn2015\\DroneFlightPath\\DroneFlightPath\\TestFile\\07_intoTheDark.txt", sb.ToString());
       var rm = new RegisterMachine();
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
 
-      Console.WriteLine($"3002: {rm.Memory[3002]}");
-      Console.WriteLine($"3003: {rm.Memory[3003]}");
-      Console.WriteLine($"3004: {rm.Memory[3004]}");
+      Console.WriteLine($"Test result: {rm.Memory[0]}");
 
-      for (int i = 0; i < 7; ++i) {
-        Console.WriteLine($"Mem[{i}]: {rm.Memory[i]}");
+      int n = 0;
+      int i = 0, j = 0, k = 0;
+      while (i < 3) {
+        while (j < 3) {
+          while (k < 3) {
+            n++;
+            ++k;
+          }
+          ++j;
+        }
+        ++i;
       }
+      Console.WriteLine($"While: {n}");
+      i = j = k = n = 0;
+      do {
+        do {
+          do {
+            ++n;
+            ++k;
+          } while (k < 3);
+          ++j;
+        } while (j < 3);
+        ++i;
+      } while (i < 3);
+      Console.WriteLine($"Do...While: {n}");
     }
   }
 }

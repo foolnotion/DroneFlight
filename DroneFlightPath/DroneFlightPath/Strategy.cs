@@ -15,6 +15,9 @@ namespace DroneFlightPath {
     public static ast While(ast condition, ast body) { return ast.While(condition, body); }
     public static ast Do(ast condition, ast body) { return ast.DoWhile(condition, body); }
     public static ast Block(params ast[] nodes) { return ast.Block(nodes); }
+    public static ast Assign(ast target, ast source) { return ast.Assign(target, source); }
+    public static ast ArrayGet(ast array, ast index) { return ast.ArrayGet(array, index); }
+    public static ast ArraySet(ast array, ast index, ast value) { return ast.ArraySet(array, index, value); }
 
     private static readonly ast hold = _(0);
     private static readonly ast up = _(1);
@@ -57,32 +60,80 @@ namespace DroneFlightPath {
       return block;
     }
 
-    public static ast Test() {
-      var rows = Mem(_(1));
-      var cols = Mem(_(2));
-      var x = Mem(_(3));
-      var y = Mem(_(4));
-      var nObstacles = _(5);
-      var nObstaclesAddr = _(0);
+    public static ast Avoid() {
+      var rows = _("rows");
+      var cols = _("cols");
+      var map = _("map", 2500);
+      var dx = _("dx");
+      var dy = _("dy");
+      var tx = _("tx");
+      var ty = _("ty");
+      var no = _("addrO"); // addr obstacles
+      var nc = _("addrC"); // addr citizens
+      var nd = _("addrD"); // addr drones
       var i = _("i");
       var j = _("j");
-      return Block(
-        While(
-          i < 10,
+      var x = _("x");
+      var y = _("y");
+      var initializeVariables = Block(
+        Assign(rows, Mem(_(1))),
+        Assign(cols, Mem(_(2))),
+        Assign(dx, Mem(_(3))),
+        Assign(dy, Mem(_(4))),
+        Assign(tx, Mem(_(5))),
+        Assign(ty, Mem(_(6))),
+        Assign(no, Mem(_(7))),
+        Assign(nc, Mem(no * 2 + 8)),
+        Assign(nd, Mem((no + nc) * 2 + 9))
+      );
+      var putObjectsOnMap = Block(
+        // define some variables
+        Assign(i, _(8)),
+        While(i < 2 * no,
           Block(
-            ast.Assign(j, i + 1),
-            While(
-              j < 10,
-              Block(
-                Mem(_(0), Mem(_(0)) + _(1)),
-                Inc(j)
-              )
-            ),
-            Inc(i)
+            Assign(x, Mem(i)),
+            Assign(y, Mem(i + 1)),
+            ArraySet(map, y * cols + x, _(1)),
+            Assign(i, i + 2)
           )
         ),
+        Assign(i, i + 1), // skip memory pos holding nc
+        While(i < 2 * nc,
+          Block(
+            Assign(x, Mem(i)),
+            Assign(y, Mem(i + 1)),
+            ArraySet(map, y * cols + x, _(1)),
+            Assign(i, i + 2)
+          )
+        )
+      );
+      return Block(
+        initializeVariables,
         ret
       );
+    }
+
+    public static ast Test() {
+      var i = _("i");
+      var j = _("j");
+      var k = _("k");
+
+      var innerK = Block(
+        Mem(_(0), Mem(_(0)) + 1),
+        Inc(k)
+      );
+      var innerJ = Block(
+        //        Assign(k, _(0)),
+        Do(k < 3, innerK),
+        Inc(j)
+      );
+      var innerI = Block(
+        //        Assign(j, _(0)),
+        Do(j < 3, innerJ),
+        Inc(i)
+      );
+      return Block(Do(i < 3, innerI), ret);
+      //      return Block(Mem(_(0), ast.Max(_(7), _(5))), ret);
     }
   }
 }
