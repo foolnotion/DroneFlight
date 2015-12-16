@@ -1,4 +1,5 @@
-﻿using ast = CodeInterpreter.AST.AstNode;
+﻿using CodeInterpreter;
+using ast = CodeInterpreter.AST.AstNode;
 
 namespace DroneFlightPath {
   public static class Strategy {
@@ -24,8 +25,73 @@ namespace DroneFlightPath {
     private static readonly ast right = _(2);
     private static readonly ast down = _(3);
     private static readonly ast left = _(4);
-    private static readonly ast drone = Mem(_(0));
+    private static readonly ast nextDroneMovement = Mem(_(0));
+    private static readonly ast numberOfMapRows = Mem(_(1));
+    private static readonly ast numberOfMapColumns = Mem(_(2));
+    private static readonly ast currentX = Mem(_(3));
+    private static readonly ast currentY = Mem(_(4));
+    private static readonly ast targetX = Mem(_(5));
+    private static readonly ast targetY = Mem(_(6));
     private static readonly ast ret = ast.Return();
+
+    public static ast NaiveGradientDescent() {
+      var numberOfObstacles = _("numberOfObstacles");
+      var numberOfCitizens = _("numberOfCitizens");
+      var numberOfDrones = _("numberOfDrones");
+
+      var i = _("i");
+      var j = _("j");
+      var x = _("x");
+      var y = _("y");
+      var currentMap = _("currentMap", 2500);
+      var obstacleStartMemoryIndex = _(8);
+      var citizenStartMemoryIndex = _("citizenStartMemoryIndex");
+      var droneStartMemoryIndex = _("droneStartMemoryIndex");
+
+      var citizenNumericMapValue = _(1);
+      var droneNumericMapValue = _(1);
+      var obstacleNumericMapValue = _(1);
+
+
+      var putObjectsOnMap = Block(
+      // put obstacles on map
+      Assign(i, obstacleStartMemoryIndex),
+      While(i < 2 * numberOfObstacles,
+        Block(
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          ArraySet(currentMap, y * numberOfMapRows + x, obstacleNumericMapValue),
+          Assign(i, i + 2)
+        )
+      ),
+      // put citizens on map (without range, for the moment)
+      Assign(numberOfCitizens, Mem(i)),
+      Assign(i, i + 1), // skip memory pos holding nc
+      Assign(citizenStartMemoryIndex, i),
+      While(i < 2 * numberOfCitizens,
+        Block(
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          ArraySet(currentMap, y * numberOfMapRows + x, citizenNumericMapValue),
+          Assign(i, i + 2)
+        )
+      ),
+      // put drones on map
+      Assign(numberOfDrones, Mem(i)),
+      Assign(i, i + 1), 
+      Assign(droneStartMemoryIndex, i),
+      While(i < 2 * numberOfDrones,
+        Block(
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          ArraySet(currentMap, y * numberOfMapRows + x, droneNumericMapValue),
+          Assign(i, i + 2)
+        )
+      )
+    );
+
+      return putObjectsOnMap;
+    }
 
     public static ast BasicStrategy() {
       // define variables
@@ -40,19 +106,19 @@ namespace DroneFlightPath {
         Set(ty, Mem(_(6))),
         If(
           cy < ty,
-          Block(Set(drone, down), ret)
+          Block(Set(nextDroneMovement, down), ret)
         ),
         If(
           cy > ty,
-          Block(Set(drone, up), ret)
+          Block(Set(nextDroneMovement, up), ret)
         ),
         If(
           cx > tx,
-          Block(Set(drone, left), ret)
+          Block(Set(nextDroneMovement, left), ret)
         ),
         If(
           cx < tx,
-          Block(Set(drone, right), ret)
+          Block(Set(nextDroneMovement, right), ret)
         ),
         ret
       );
