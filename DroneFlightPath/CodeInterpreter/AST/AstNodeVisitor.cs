@@ -70,10 +70,17 @@ namespace CodeInterpreter.AST {
       } else {
         MemoryMap.MapObject(variable.VariableName, variable.Size);
       }
+      if (node.Type == AstNodeType.Loop) {
+        var loopNode = (AstLoopNode)node;
+        loopNode.Body.Accept(this);
+      }
+      if (node.Type == AstNodeType.Conditional) {
+        var conditionalNode = (AstConditionalNode)node;
+        conditionalNode.TrueBranch.Accept(this);
+        conditionalNode.FalseBranch?.Accept(this);
+      }
     }
   }
-
-
 
   public class GenerateAsmVisitor : AstNodeVisitor {
     public Dictionary<string, int> JumpLocations { get; private set; }
@@ -128,8 +135,9 @@ namespace CodeInterpreter.AST {
             switch (memoryAccessNode.Op) {
               case AstMemoryOp.Read: {
                   Code.AddRange(new[] {
-                    Lda(addrArg),       // load address into accumulator
-                    Ldn(Arg.A(false)),  // set N register
+//                    Lda(addrArg),       // load address into accumulator
+//                    Sta(resultAddrArg),
+                    Ldn(addrArg),  // set N register
                     Lda(Arg.N(true)),   // load value from memory
                     Sta(resultAddrArg)  // store result
                   });
@@ -139,8 +147,9 @@ namespace CodeInterpreter.AST {
                   var value = memoryAccessNode.Value;
                   var valueArg = value.IsLeaf ? LeafToArg(value) : Arg.Mem(MemoryMap[value.Id]);
                   Code.AddRange(new[] {
-                    Lda(addrArg),       // load address into accumulator
-                    Ldn(Arg.A(false)),  // set N register
+//                    Lda(addrArg),       // load address into accumulator
+//                    Ldn(Arg.A(false)),  // set N register
+                    Ldn(addrArg),
                     Lda(valueArg),      // load value into accumulator
                     Sta(Arg.N(true)),   // set new value in memory
                     Sta(resultAddrArg)  // store result
@@ -163,7 +172,8 @@ namespace CodeInterpreter.AST {
                   Code.AddRange(new[] {
                     Lda(arrayArg),
                     Adda(indexArg),
-                    Ldn(Arg.A(false)),
+                    Sta(resultAddrArg),
+                    Ldn(resultAddrArg),
                     Lda(Arg.N(true)),
                     Sta(resultAddrArg)
                   });
@@ -175,7 +185,8 @@ namespace CodeInterpreter.AST {
                   Code.AddRange(new[] {
                     Lda(arrayArg),
                     Adda(indexArg),
-                    Ldn(Arg.A(false)),
+                    Sta(resultAddrArg),
+                    Ldn(resultAddrArg),
                     Lda(valueArg),
                     Sta(Arg.N(true))
                   });
@@ -226,7 +237,22 @@ namespace CodeInterpreter.AST {
                   break;
                 }
               case AstUnaryOp.Negate: {
-                  throw new NotImplementedException();
+                  Code.AddRange(new[] {
+                    Lda(Arg.Val(0)),
+                    Suba(unaryArgAddr),
+                    Sta(resultAddrArg)
+                  });
+                  break;
+                }
+              case AstUnaryOp.Abs: {
+                  Code.AddRange(new[] {
+                    Lda(Arg.Val(0)),
+                    Suba(unaryArgAddr),
+                    Jge(Arg.Val(count + 4)),
+                    Lda(unaryArgAddr),
+                    Sta(resultAddrArg)
+                  });
+                  break;
                 }
               default:
                 throw new ArgumentOutOfRangeException();

@@ -2,70 +2,23 @@
 using System.Text;
 
 namespace CodeInterpreter.AST {
-  public enum AstNodeType {
-    Block,
-    Constant,
-    Variable,
-    BinaryOp,
-    UnaryOp,
-    Loop,
-    Conditional,
-    ArrayAccess,
-    MemoryAccess,
-    Return
-  }
-
+  public enum AstNodeType { Block, Constant, Variable, BinaryOp, UnaryOp, Loop, Conditional, ArrayAccess, MemoryAccess, Return }
   public enum AstUnaryOp {
     // arithmetic operations
-    Negate,
-    Increment,
-    Decrement,
+    Abs, Negate, Increment, Decrement,
     // logical operations
-    True,
-    False
+    True, False
   }
-
   public enum AstBinaryOp {
     // arithmetic operations
-    Assign,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    Pow,
-    Min,
-    Max,
+    Assign, Add, Sub, Mul, Div, Mod, Pow, Min, Max,
     // logical operations
-    Eq,
-    Neq,
-    Lt,
-    Lte,
-    Gt,
-    Gte,
-    And,
-    Or
+    Eq, Neq, Lt, Lte, Gt, Gte, And, Or
   }
-
-  public enum AstArrayOp {
-    GetIndex,
-    SetIndex
-  }
-
-  public enum AstMemoryOp {
-    Read,
-    Write
-  }
-
-  public enum AstConditionalOp {
-    IfThen,
-    IfThenElse,
-  }
-
-  public enum AstLoopType {
-    While,
-    DoWhile
-  }
+  public enum AstArrayOp { GetIndex, SetIndex }
+  public enum AstMemoryOp { Read, Write }
+  public enum AstConditionalOp { IfThen, IfThenElse }
+  public enum AstLoopType { While, DoWhile }
 
   public class Ast {
     private Ast() { }
@@ -342,6 +295,10 @@ namespace CodeInterpreter.AST {
 
     public static AstNode DoWhile(AstNode condition, AstNode body) {
       return new AstLoopNode(AstLoopType.DoWhile, condition, body);
+    }
+
+    public static AstNode Abs(AstNode arg) {
+      return new AstUnaryNode(AstUnaryOp.Abs, arg);
     }
 
     public static AstNode Neg(AstNode arg) {
