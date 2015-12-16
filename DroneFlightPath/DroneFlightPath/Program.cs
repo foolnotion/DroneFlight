@@ -16,7 +16,7 @@ namespace DroneFlightPath {
 
     static void Main(string[] args) {
       var sb = new StringBuilder();
-      var block = Strategy.Test();
+      var block = Strategy.NaiveGradientDescent();
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
@@ -25,34 +25,10 @@ namespace DroneFlightPath {
       var rm = new RegisterMachine();
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
-
-      Console.WriteLine($"Test result: {rm.Memory[0]}");
-
-      int n = 0;
-      int i = 0, j = 0, k = 0;
-      while (i < 3) {
-        while (j < 3) {
-          while (k < 3) {
-            n++;
-            ++k;
-          }
-          ++j;
-        }
-        ++i;
-      }
-      Console.WriteLine($"While: {n}");
-      i = j = k = n = 0;
-      do {
-        do {
-          do {
-            ++n;
-            ++k;
-          } while (k < 3);
-          ++j;
-        } while (j < 3);
-        ++i;
-      } while (i < 3);
-      Console.WriteLine($"Do...While: {n}");
+      rm.Run();
+      rm.Run();
+      Console.WriteLine($"Test result: {rm.Memory[3]}");
+      Console.Read();
     }
   }
 }
