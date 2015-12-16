@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
-using CodeInterpreter;
 using CodeInterpreter.AST;
 
 namespace DroneFlightPath {
@@ -15,20 +14,40 @@ namespace DroneFlightPath {
     };
 
     static void Main(string[] args) {
-      var sb = new StringBuilder();
-      var block = Strategy.NaiveGradientDescent();
+      var block = Strategy.Manhattan();
+      //      var block = Strategy.Test();
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
       block.Accept(genVisitor);
 
-      var rm = new RegisterMachine();
-      rm.LoadIntructions(genVisitor.Code);
-      rm.Run();
-      rm.Run();
-      rm.Run();
-      Console.WriteLine($"Test result: {rm.Memory[3]}");
-      Console.Read();
+      var sb = new StringBuilder();
+      foreach (var c in genVisitor.Code) {
+        sb.AppendLine(c.ToString());
+      }
+      File.WriteAllText("02_dontGetShot.txt", sb.ToString());
+
+      //      var rm = new RegisterMachine();
+      //      rm.Memory[1] = 3; // 3 rows
+      //      rm.Memory[2] = 3; // 3 columns
+      //      rm.Memory[3] = 0; // dx = 0
+      //      rm.Memory[4] = 0; // dy = 0
+      //      rm.Memory[5] = 2; // tx = 0
+      //      rm.Memory[6] = 2; // ty = 0
+      //      rm.Memory[7] = 1; // 1 obstacle
+      //      rm.Memory[8] = 1;
+      //      rm.Memory[9] = 0;
+      //
+      //      rm.LoadIntructions(genVisitor.Code);
+      //      int step = 0;
+      //      while (true) {
+      //        rm.Run();
+      //        ++step;
+      //        if (step > 10)
+      //          break;
+      //      }
+      //      Console.WriteLine($"Test result: {rm.Memory[0]}");
+      //      Console.Read();
     }
   }
 }
