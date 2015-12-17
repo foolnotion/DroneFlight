@@ -38,8 +38,8 @@ namespace DroneFlightPath {
     private static readonly ast Down = _(3);
     private static readonly ast Left = _(4);
     private static readonly ast NextDroneMovement = Mem(_(0));
-    private static readonly ast NumberOfMapRows = Mem(_(1));
-    private static readonly ast NumberOfMapColumns = Mem(_(2));
+    private static readonly ast MapRows = Mem(_(1));
+    private static readonly ast MapCols = Mem(_(2));
     private static readonly ast NumberOfObstacles = Mem(_(7));
 
     private static readonly ast CurrentX = Mem(_(3));
@@ -75,24 +75,29 @@ namespace DroneFlightPath {
       var xmax = _("xmax");
       var ymax = _("ymax");
       var currentMap = (AstVariableNode)_("currentMap", 2500);
+      var lastMap = (AstVariableNode)_("lastMap", 2500);
+      var trajectorySoFar = (AstVariableNode)_("trajectorySoFar", 2500);
       var obstacleStartMemoryIndex = _(8);
       var citizenStartMemoryIndex = _("citizenStartMemoryIndex");
       var droneStartMemoryIndex = _("droneStartMemoryIndex");
       ast min = _("min"), left = _("left"), right = _("right"), down = _("down"), up = _("up"); // for the 4 squares surrounding the current position
-      ast cxMinus1 = _("cxMinus1"), cxPlus1 = _("cxPlus1"), cyMinus1 = _("cyMinus1"), cyPlus1 = _("cyPlus1");
+      ast cx = _("cx"), cy = _("cy"), cxMinus1 = _("cxMinus1"), cxPlus1 = _("cxPlus1"), cyMinus1 = _("cyMinus1"), cyPlus1 = _("cyPlus1");
 
-      var citizenNumericMapValue = _(2500);
-      var droneNumericMapValue = _(2500);
-      var obstacleNumericMapValue = _(2500);
+      var citizenMapValue = _(2500);
+      var droneMapValue = _(2500);
+      var obstacleMapValue = _(2500);
 
       var clearMap = _(
         Assign(i, _(0)),
         While(i < currentMap.Size,
+          ArraySet(lastMap, i, ArrayGet(currentMap, i)),
           ArraySet(currentMap, i, _(0)),
           Inc(i)
         )
+        , ArraySet(trajectorySoFar, CurrentX * MapCols + CurrentY, _(1))
       );
 
+      #region calculateL1Distance
       var calculateL1Distance = _(
         // assign values to the surrounding squares(left, right, up, down) as the L1 distance
         Assign(dx, Abs(CurrentX - TargetX)),
@@ -106,23 +111,29 @@ namespace DroneFlightPath {
         Assign(up, _(2500)),
         Assign(down, _(2500)),
         If(CurrentX > 0, _(
-          Assign(left, dy + Abs(cxMinus1 - TargetX)),
-          ArraySet(currentMap, cxMinus1 * NumberOfMapColumns + CurrentY, left)
+          Assign(left, dy + Abs(cxMinus1 - TargetX) + ArrayGet(trajectorySoFar, cxMinus1 * MapCols + CurrentY)),
+          If(dy == 0 & CurrentX < TargetX, Inc(left)), // add a small penalty for going in the direction opposite to the target
+          ArraySet(currentMap, cxMinus1 * MapCols + CurrentY, left)
         )),
         If(CurrentY > 0, _(
-          Assign(up, dx + Abs(cyMinus1 - TargetY)),
-          ArraySet(currentMap, CurrentX * NumberOfMapColumns + cyMinus1, up)
+          Assign(up, dx + Abs(cyMinus1 - TargetY) + ArrayGet(trajectorySoFar, CurrentX * MapCols + cyMinus1)),
+          If(dx == 0 & CurrentY < TargetY, Inc(up)),
+          ArraySet(currentMap, CurrentX * MapCols + cyMinus1, up)
         )),
-        If(cxPlus1 < NumberOfMapColumns, _(
-          Assign(right, dy + Abs(cxPlus1 - TargetX)),
-          ArraySet(currentMap, cxPlus1 * NumberOfMapColumns + CurrentY, right)
+        If(cxPlus1 < MapCols, _(
+          Assign(right, dy + Abs(cxPlus1 - TargetX) + ArrayGet(trajectorySoFar, cxPlus1 * MapCols + CurrentY)),
+          If(dy == 0 & CurrentX > TargetX, Inc(right)),
+          ArraySet(currentMap, cxPlus1 * MapCols + CurrentY, right)
         )),
-        If(cyPlus1 < NumberOfMapRows, _(
-          Assign(down, dx + Abs(cyPlus1 - TargetY)),
-          ArraySet(currentMap, CurrentX * NumberOfMapColumns + cyPlus1, down)
+        If(cyPlus1 < MapRows, _(
+          Assign(down, dx + Abs(cyPlus1 - TargetY) + ArrayGet(trajectorySoFar, CurrentX * MapCols + cyPlus1)),
+          If(dx == 0 & CurrentY > TargetY, Inc(down)),
+          ArraySet(currentMap, CurrentX * MapCols + cyPlus1, down)
         ))
       );
+      #endregion
 
+      #region putObjectsOnMap
       var putObjectsOnMap = _(
         // put obstacles on map
         Assign(i, obstacleStartMemoryIndex),
@@ -130,7 +141,7 @@ namespace DroneFlightPath {
         While(i < j,
           Assign(x, Mem(i)),
           Assign(y, Mem(i + 1)),
-          ArraySet(currentMap, x * NumberOfMapColumns + y, obstacleNumericMapValue),
+          ArraySet(currentMap, x * MapCols + y, obstacleMapValue),
           Assign(i, i + 2)
         ),
         // put citizens on map
@@ -142,13 +153,13 @@ namespace DroneFlightPath {
           Assign(y, Mem(i + 1)),
           // calculate the area of the citizens and set all values to 2500
           Assign(xmin, Max(_(0), x - 3)),
-          Assign(xmax, Min(NumberOfMapColumns, x + 3)),
+          Assign(xmax, Min(MapCols, x + 3)),
           Assign(ymin, Max(_(0), y - 3)),
-          Assign(ymax, Min(NumberOfMapColumns, y + 3)),
+          Assign(ymax, Min(MapCols, y + 3)),
           While(xmin < xmax,
             Assign(j, ymin),
             While(j < ymax,
-              ArraySet(currentMap, xmin * NumberOfMapColumns + j, citizenNumericMapValue),
+              ArraySet(currentMap, xmin * MapCols + j, citizenMapValue),
               Inc(j)
             ),
             Inc(xmin)
@@ -159,52 +170,71 @@ namespace DroneFlightPath {
         Assign(numberOfDrones, Mem(i)),
         Inc(i), // skip memory pos holding numberOfDrones 
         Assign(j, i + 2 * numberOfDrones),
-        Assign(droneStartMemoryIndex, i),
+        //        Assign(droneStartMemoryIndex, i),
         While(i < 2 * numberOfDrones,
           Assign(x, Mem(i)),
           Assign(y, Mem(i + 1)),
-          ArraySet(currentMap, x * NumberOfMapColumns + y, droneNumericMapValue),
+          ArraySet(currentMap, x * MapCols + y, droneMapValue),
           Assign(i, i + 2)
         )
       );
+      #endregion
 
+      #region chooseDirection
       var chooseDirection = _(
         // all values set, now make moves based on manhattan distance
         If(CurrentX > 0, _(
-          Assign(left, ArrayGet(currentMap, cxMinus1 * NumberOfMapColumns + CurrentY))
+          Assign(left, ArrayGet(currentMap, cxMinus1 * MapCols + CurrentY))
         )),
         If(CurrentY > 0, _(
-          Assign(up, ArrayGet(currentMap, CurrentX * NumberOfMapColumns + cyMinus1))
+          Assign(up, ArrayGet(currentMap, CurrentX * MapCols + cyMinus1))
         )),
-        If(CurrentX < NumberOfMapColumns - 1, _(
-          Assign(right, ArrayGet(currentMap, cxPlus1 * NumberOfMapColumns + CurrentY))
+        If(cxPlus1 < MapCols, _(
+          Assign(right, ArrayGet(currentMap, cxPlus1 * MapCols + CurrentY))
         )),
-        If(CurrentY < NumberOfMapRows - 1, _(
-          Assign(down, ArrayGet(currentMap, CurrentX * NumberOfMapColumns + cyPlus1))
+        If(cyPlus1 < MapRows, _(
+          Assign(down, ArrayGet(currentMap, CurrentX * MapCols + cyPlus1))
         )),
-      // pick square with lowest value as next move
+        // pick square with lowest value as next move
         Assign(min, Min(left, right, up, down)),
+        //        Mem(_(0), Hold),
         If(min == 2500, _(
-          Mem(_(0), Hold),
-          Ret
+          Mem(_(0), Hold)
+                  , Ret
         )),
         If(left == min & CurrentX > 0, _(
-          Mem(_(0), Left),
-          Ret
+          Mem(_(0), Left)
+                  , Ret
         )),
-        If(right == min & cxPlus1 < NumberOfMapColumns, _(
-          Mem(_(0), Right),
-          Ret
+        If(right == min & cxPlus1 < MapCols, _(
+          Mem(_(0), Right)
+                  , Ret
         )),
         If(up == min & CurrentY > 0, _(
-          Mem(_(0), Up),
-          Ret
+          Mem(_(0), Up)
+                  , Ret
         )),
-        If(down == min & cyPlus1 < NumberOfMapRows, _(
-          Mem(_(0), Down),
-          Ret
-        )),
-        Mem(_(0), Hold)
+        If(down == min & cyPlus1 < MapRows, _(
+          Mem(_(0), Down)
+                  , Ret
+        ))
+      );
+      #endregion
+
+      // this next block is to be used only for simulation (not when submitting solutions!)
+      var moveDrone = _(
+        If(Mem(_(0)) == Left,
+          Mem(_(3), CurrentX - 1)
+        ),
+        If(Mem(_(0)) == Down,
+          Mem(_(3), CurrentX + 1)
+        ),
+        If(Mem(_(0)) == Up,
+          Mem(_(4), CurrentY - 1)
+        ),
+        If(Mem(_(0)) == Down,
+          Mem(_(4), CurrentY + 1)
+        )
       );
 
       return _(
@@ -212,6 +242,7 @@ namespace DroneFlightPath {
           calculateL1Distance,
           putObjectsOnMap,
           chooseDirection,
+          //          moveDrone,
           Ret
       );
     }
