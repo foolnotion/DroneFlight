@@ -220,9 +220,21 @@ namespace CodeInterpreter.AST {
     public static AstNode Min(AstNode left, AstNode right) {
       return new AstBinaryNode(AstBinaryOp.Min, left, right);
     }
+    public static AstNode Min(AstNode left, int right) {
+      return new AstBinaryNode(AstBinaryOp.Min, left, Constant(right));
+    }
+    public static AstNode Min(int left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.Min, Constant(left), right);
+    }
 
     public static AstNode Max(AstNode left, AstNode right) {
       return new AstBinaryNode(AstBinaryOp.Max, left, right);
+    }
+    public static AstNode Max(AstNode left, int right) {
+      return new AstBinaryNode(AstBinaryOp.Max, left, Constant(right));
+    }
+    public static AstNode Max(int left, AstNode right) {
+      return new AstBinaryNode(AstBinaryOp.Max, Constant(left), right);
     }
 
     public static AstNode Add(AstNode left, AstNode right) {

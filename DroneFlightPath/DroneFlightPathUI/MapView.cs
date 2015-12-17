@@ -47,6 +47,7 @@ namespace DroneFlightPathUI {
       var path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory,
           @"..\..\..\DroneFlightPath\Maps\01_letsGetToKnowEachOther.txt"));
       var m = MapUtil.LoadPath(path);
+      m.Machine = new RegisterMachine(1000000);
       Map = m;
       InitWatchDataView();
       mapWeight = 0.01;
@@ -66,7 +67,7 @@ namespace DroneFlightPathUI {
       watchDataView.AutoGenerateColumns = false;
       watchDataView.AutoSize = false;
       watchDataView.DataSource = watchDataSource;
-      
+
 
       var nameColumn = new DataGridViewTextBoxColumn();
       nameColumn.DataPropertyName = "Name";
@@ -162,10 +163,9 @@ namespace DroneFlightPathUI {
           var oldValue = (int)row.Cells[1].Value;
           var newValue = GetMemoryValueForVariableName(variableName);
           row.Cells[1].Value = newValue;
-          if(newValue == oldValue) {
+          if (newValue == oldValue) {
             row.Cells[1].Style = new DataGridViewCellStyle { ForeColor = Color.Black };
-          }
-          else {
+          } else {
             row.Cells[1].Style = new DataGridViewCellStyle { ForeColor = Color.Red };
           }
         }
@@ -175,7 +175,7 @@ namespace DroneFlightPathUI {
     private void UpdateRunInfo() {
       var steps = map.TimeStep;
       var cycles = machine.Cycles;
-      scoreValueLabel.Text = (mapWeight * 1e6 / Math.Log(steps * steps * cycles)).ToString(".##") ;
+      scoreValueLabel.Text = (mapWeight * 1e6 / Math.Log(steps * steps * cycles)).ToString(".##");
       cyclesValueLabel.Text = cycles.ToString();
       stepsValueLabel.Text = steps.ToString();
     }
@@ -203,6 +203,7 @@ namespace DroneFlightPathUI {
             int x = i * SquareSize;
             int y = j * SquareSize;
             var rectangle = new Rectangle(x, y, SquareSize, SquareSize);
+
             DrawRectangle(g, rectangle, Pens.Gray, new SolidBrush(Color.White));
             if (i % 5 == 0 && j % 5 == 0) {
               rectangle = new Rectangle(x - 1, y - 1, 2, 2);
@@ -244,32 +245,28 @@ namespace DroneFlightPathUI {
             if (drone != null && drone.ControllerType != ControllerType.Direction) continue;
             float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
             switch (m.Direction) {
-              case Direction.Down:
-                {
+              case Direction.Down: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
                   y2 = Math.Min(y1 + SquareSize, map.Rows * SquareSize);
                   break;
                 }
-              case Direction.Up:
-                {
+              case Direction.Up: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = x1;
                   y2 = Math.Max(0, y1 - SquareSize);
                   break;
                 }
-              case Direction.Left:
-                {
+              case Direction.Left: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = Math.Max(0, x1 - SquareSize);
                   y2 = y1;
                   break;
                 }
-              case Direction.Right:
-                {
+              case Direction.Right: {
                   x1 = (float)(x + 0.5 * SquareSize);
                   y1 = (float)(y + 0.5 * SquareSize);
                   x2 = Math.Min(x1 + SquareSize, map.Cols * SquareSize);
@@ -340,7 +337,8 @@ namespace DroneFlightPathUI {
         try {
           var path = Path.Combine(ofd.InitialDirectory, ofd.FileName);
           var code = RegisterMachineUtil.LoadPath(path).ToArray();
-          machine = new RegisterMachine();
+          Map.Machine = new RegisterMachine();
+          machine = Map.Machine;
           machine.LoadIntructions(code);
           ClearWatchVariables();
           ClearRunInfo();
@@ -350,14 +348,11 @@ namespace DroneFlightPathUI {
         }
       }
 
-    
+
     }
 
     private void button_Step_Click(object sender, EventArgs e) {
       try {
-        machine.Run();
-        var direction = (Direction)machine.Memory[0];
-        map.Drone.Direction = direction;
         map.Step();
         Draw();
         UpdateWatchVariables();
@@ -399,7 +394,8 @@ namespace DroneFlightPathUI {
           throw new Exception("Unknown resource index");
       }
       Map = MapUtil.Load(res);
-      machine = new RegisterMachine();
+      Map.Machine = new RegisterMachine(1000000);
+      machine = Map.Machine;
     }
   }
 }
