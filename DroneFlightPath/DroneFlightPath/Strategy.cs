@@ -50,7 +50,222 @@ namespace DroneFlightPath {
     #endregion
 
     public static ast NaiveGradientDescent() {
-      return Ret;
+
+      #region variables
+      var currentMap = (AstVariableNode)_("currentMap", 2500);
+      var currentQueueX = (AstVariableNode)_("currentQueueX", 2500);
+      var currentQueueY = (AstVariableNode)_("currentQueueY", 2500);
+      var nextQueueX = (AstVariableNode)_("nextQueueX", 2500);
+      var nextQueueY = (AstVariableNode)_("nextQueueY", 2500);
+
+      var i = _("i");
+      var j = _("j");
+      var x = _("x");
+      var y = _("y");
+
+      var xmin = _("xmin");
+      var ymin = _("ymin");
+      var xmax = _("xmax");
+      var ymax = _("ymax");
+
+      var numberOfObstacles = _("NumberOfObstacles");
+      var numberOfCitizens = _("numberOfCitizens");
+      var numberOfDrones = _("numberOfDrones");
+
+      var citizenMapValue = _(2500);
+      var droneMapValue = _(2500);
+      var obstacleMapValue = _(2500);
+
+      var currentQueueSize = _("currentQueueSize");
+      var currentQueueIndex = _("currentQueueIndex");
+      var nextQueueIndex = _("nextQueueIndex");
+
+      var currentWaveFront = _("currentWaveFront");
+      var maxWaveFront = _("maxWaveFront");
+      var initialTargetValue = _("initialTargetValue");
+      var droneFound = _("droneFound");
+
+      var obstacleStartMemoryIndex = _(8);
+      var citizenStartMemoryIndex = _("citizenStartMemoryIndex");
+      var droneStartMemoryIndex = _("droneStartMemoryIndex");
+      var minCellValue = _("minCellValue");
+      var chosenDirection = _("chosenDirection");
+
+      #endregion
+
+      var clearMap = _(
+        Assign(i, _(0)),
+        While(i < currentMap.Size,
+          ArraySet(currentMap, i, _(0)),
+          Inc(i)
+        )
+      );
+
+      var assignVariables = _(
+        ArraySet(currentQueueX, _(0), TargetX),
+        ArraySet(currentQueueY, _(0), TargetY),
+        Assign(currentQueueSize, _(1)),
+        Assign(currentWaveFront, _(0)),
+        Assign(initialTargetValue, _(3)),
+        Assign(maxWaveFront, _(80)),
+        Assign(droneFound, _(0))
+      );
+
+
+      #region putObjectsOnMap
+      var putObjectsOnMap = _(
+        // put obstacles on map
+        Assign(i, obstacleStartMemoryIndex),
+        Assign(j, i + 2 * NumberOfObstacles),
+        While(i < j,
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          ArraySet(currentMap, x * MapCols + y, obstacleMapValue),
+          Assign(i, i + 2)
+        ),
+        // put citizens on map
+        Assign(numberOfCitizens, Mem(i)),
+        Inc(i), // skip memory pos holding numberOfCitizens
+        Assign(j, i + 2 * numberOfCitizens),
+        While(i < j,
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          // calculate the area of the citizens and set all values to 2500
+          Assign(xmin, Max(_(0), x - 3)),
+          Assign(xmax, Min(MapCols, x + 3)),
+          Assign(ymin, Max(_(0), y - 3)),
+          Assign(ymax, Min(MapCols, y + 3)),
+          While(xmin < xmax,
+            Assign(j, ymin),
+            While(j < ymax,
+              ArraySet(currentMap, xmin * MapCols + j, citizenMapValue),
+              Inc(j)
+            ),
+            Inc(xmin)
+          ),
+          Assign(i, i + 2)
+        ),
+        // put drones on map
+        Assign(numberOfDrones, Mem(i)),
+        Inc(i), // skip memory pos holding numberOfDrones 
+        Assign(j, i + 2 * numberOfDrones),
+        //        Assign(droneStartMemoryIndex, i),
+        While(i < 2 * numberOfDrones,
+          Assign(x, Mem(i)),
+          Assign(y, Mem(i + 1)),
+          ArraySet(currentMap, x * MapCols + y, droneMapValue),
+          Assign(i, i + 2)
+        )
+      );
+      #endregion
+
+      #region waveFrontPropagation
+
+      var waveFrontPropagation = _(
+
+        Do(droneFound == 0 & currentWaveFront < maxWaveFront,
+          _(
+
+            Assign(currentQueueIndex, _(0)),
+            Assign(nextQueueIndex, _(0)),
+            Do(currentQueueIndex < currentQueueSize,
+            _(
+              If(ArrayGet(currentQueueX, currentQueueIndex) == CurrentX & ArrayGet(currentQueueY, currentQueueIndex) == CurrentY,
+              _(
+                  ArraySet(currentMap, ArrayGet(currentQueueY, currentQueueIndex) * MapCols + ArrayGet(currentQueueX, currentQueueIndex), initialTargetValue + currentWaveFront),
+                  Set(droneFound, _(1))
+                ),
+              _( //else
+                  If(ArrayGet(currentMap, ArrayGet(currentQueueY, currentQueueIndex) * MapCols + ArrayGet(currentQueueX, currentQueueIndex)) == 0,  // y*cols + X
+                    _(
+                      ArraySet(currentMap, ArrayGet(currentQueueY, currentQueueIndex) * MapCols + ArrayGet(currentQueueX, currentQueueIndex), initialTargetValue + currentWaveFront),
+                      If(ArrayGet(currentQueueY, currentQueueIndex) + 1 < MapRows,
+                        _(
+                          ArraySet(nextQueueX, nextQueueIndex, ArrayGet(currentQueueX, currentQueueIndex)),
+                          ArraySet(nextQueueY, nextQueueIndex, ArrayGet(currentQueueY, currentQueueIndex) + 1),
+                          Inc(nextQueueIndex)
+                        )),
+                      If(ArrayGet(currentQueueY, currentQueueIndex) > 0,
+                        _(
+                          ArraySet(nextQueueX, nextQueueIndex, ArrayGet(currentQueueX, currentQueueIndex)),
+                          ArraySet(nextQueueY, nextQueueIndex, ArrayGet(currentQueueY, currentQueueIndex) - 1),
+                          Inc(nextQueueIndex)
+                        )),
+                       If(ArrayGet(currentQueueX, currentQueueIndex) + 1 < MapCols,
+                        _(
+                          ArraySet(nextQueueX, nextQueueIndex, ArrayGet(currentQueueX, currentQueueIndex) + 1),
+                          ArraySet(nextQueueY, nextQueueIndex, ArrayGet(currentQueueY, currentQueueIndex)),
+                          Inc(nextQueueIndex)
+                        )),
+                       If(ArrayGet(currentQueueX, currentQueueIndex) > 0,
+                        _(
+                          ArraySet(nextQueueX, nextQueueIndex, ArrayGet(currentQueueX, currentQueueIndex) - 1),
+                          ArraySet(nextQueueY, nextQueueIndex, ArrayGet(currentQueueY, currentQueueIndex)),
+                          Inc(nextQueueIndex)
+                        ))
+                    ))
+
+              )),
+              Inc(currentQueueIndex)
+            )),
+            Assign(i, _(0)),
+            While(i < nextQueueIndex,
+              ArraySet(currentQueueX, i, ArrayGet(nextQueueX, i)),
+              ArraySet(currentQueueY, i, ArrayGet(nextQueueY, i)),
+              Inc(i)
+            ),
+
+            Assign(currentQueueSize, nextQueueIndex),
+            //  ArraySet(currentMap, _(0), droneFound),
+            Inc(currentWaveFront)
+          ))
+
+      );
+      #endregion
+
+      var chooseDirectionBasedOnNeighbours = _(
+          Assign(minCellValue, _(2500)),
+          If(CurrentX + 1 < MapCols & ArrayGet(currentMap, CurrentY * MapCols + CurrentX + 1) < minCellValue & ArrayGet(currentMap, CurrentY * MapCols + CurrentX + 1) > 0,
+            _(
+              Assign(minCellValue, ArrayGet(currentMap, CurrentY * MapCols + CurrentX + 1)),
+              Assign(chosenDirection, Right)
+            )),
+          If(CurrentX > 0 & ArrayGet(currentMap, CurrentY * MapCols + CurrentX - 1) < minCellValue & ArrayGet(currentMap, CurrentY * MapCols + CurrentX - 1) > 0,
+            _(
+              Assign(minCellValue, ArrayGet(currentMap, CurrentY * MapCols + CurrentX - 1)),
+              Assign(chosenDirection, Left)
+            )),
+           If(CurrentY + 1 < MapRows & ArrayGet(currentMap, (CurrentY + 1) * MapCols + CurrentX) < minCellValue & ArrayGet(currentMap, (CurrentY + 1) * MapCols + CurrentX) > 0,
+            _(
+              Assign(minCellValue, ArrayGet(currentMap, (CurrentY + 1) * MapCols + CurrentX)),
+              Assign(chosenDirection, Up)
+            )),
+           If(CurrentY > 0 & ArrayGet(currentMap, (CurrentY - 1) * MapCols + CurrentX) < minCellValue & ArrayGet(currentMap, (CurrentY - 1) * MapCols + CurrentX) > 0,
+            _(
+              Assign(minCellValue, ArrayGet(currentMap, (CurrentY - 1) * MapCols + CurrentX - 1)),
+
+              Assign(chosenDirection,Down)
+            ))
+
+        );
+
+      var finalCodeBlock = _(
+          clearMap,
+          assignVariables,
+          putObjectsOnMap,
+          waveFrontPropagation,
+            //If(droneFound == 1,
+            //_(
+            chooseDirectionBasedOnNeighbours,
+         //),
+         //_( // else
+         //  chosenDirection = Down
+         //)),
+         Mem(_(0), chosenDirection),
+         Ret
+        );
+
+      return finalCodeBlock;
     }
 
     /// <summary>
