@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CodeInterpreter;
 
 namespace DroneFlightPath {
   public enum Direction : byte {
@@ -101,14 +102,50 @@ namespace DroneFlightPath {
   public class Map {
     private List<Object> mapObjects;
     public IEnumerable<Object> ActiveObjects { get { return mapObjects.Where(x => x.Step <= TimeStep); } }
-    //    public IEnumerable<Object> Obstacles { get { return ActiveObjects.Where(x => x.Type == ObjectType.Obstacle); } }
-    //    public IEnumerable<Object> Drones { get { return ActiveObjects.Where(x => x.Type == ObjectType.Drone); } }
-    //    public IEnumerable<Object> Citizens { get { return ActiveObjects.Where(x => x.Type == ObjectType.Citizen); } }
+    public IEnumerable<Object> Obstacles { get { return ActiveObjects.Where(x => x.Type == ObjectType.Obstacle); } }
+    public IEnumerable<Object> Drones { get { return ActiveObjects.Where(x => x.Type == ObjectType.Drone); } }
+    public IEnumerable<Object> Citizens { get { return ActiveObjects.Where(x => x.Type == ObjectType.Citizen); } }
     public int TimeStep { get; set; }
     public int Rows { get; set; }
     public int Cols { get; set; }
     public Point Target { get; set; }
     public Drone Drone { get; set; }
+    public RegisterMachine Machine { get; set; }
+
+
+    public void AddObjectsToMachineMemory() {
+      Machine.Memory[1] = Rows;
+      Machine.Memory[2] = Cols;
+      Machine.Memory[3] = Drone.Position.X;
+      Machine.Memory[4] = Drone.Position.Y;
+      Machine.Memory[5] = Target.X;
+      Machine.Memory[6] = Target.Y;
+      var numberOfObstacles = Obstacles.Count();
+      var numberOfCitizens = Citizens.Count();
+      var numberOfDrones = Drones.Count();
+      Machine.Memory[7] = numberOfObstacles;
+      int i = 8;
+      foreach (var o in Obstacles) {
+        Machine.Memory[i] = o.Position.X;
+        Machine.Memory[i + 1] = o.Position.Y;
+        i += 2;
+      }
+      Machine.Memory[i] = numberOfCitizens;
+      ++i;
+      foreach (var c in Citizens) {
+        Machine.Memory[i] = c.Position.X;
+        Machine.Memory[i + 1] = c.Position.Y;
+        i += 2;
+      }
+      Machine.Memory[i] = numberOfDrones;
+      ++i;
+      foreach (var d in Drones) {
+        Machine.Memory[i] = d.Position.X;
+        Machine.Memory[i + 1] = d.Position.Y;
+        i += 2;
+      }
+    }
+
 
     public void MoveUp() { Drone.Position = new Point(Drone.Position.X, Drone.Position.Y - 1); }
     public void MoveDown() { Drone.Position = new Point(Drone.Position.X, Drone.Position.Y + 1); }
@@ -116,6 +153,9 @@ namespace DroneFlightPath {
     public void MoveRight() { Drone.Position = new Point(Drone.Position.X + 1, Drone.Position.Y); }
 
     public void Step() {
+      AddObjectsToMachineMemory();
+      Machine.Run();
+      Drone.Direction = (Direction)Machine.Memory[0];
       Drone.Move();
       UpdateObjectPositions();
       ++TimeStep;
