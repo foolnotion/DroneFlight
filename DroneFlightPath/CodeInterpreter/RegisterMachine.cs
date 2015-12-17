@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CodeInterpreter.AST;
 
 namespace CodeInterpreter {
   public enum OpCode : byte { Sta, Lda, Ldn, Adda, Suba, Jge, Hlt }
@@ -152,6 +153,7 @@ namespace CodeInterpreter {
     public int A;
     public int N;
 
+    public MemoryMap MemoryMap { get; set; }
     private RegisterMachineState state;
 
     public int Cycles { get; private set; }

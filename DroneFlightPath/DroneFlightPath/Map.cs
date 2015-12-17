@@ -152,10 +152,13 @@ namespace DroneFlightPath {
     public void MoveLeft() { Drone.Position = new Point(Drone.Position.X - 1, Drone.Position.Y); }
     public void MoveRight() { Drone.Position = new Point(Drone.Position.X + 1, Drone.Position.Y); }
 
-    public void Step() {
+    public void RunPathFinding() {
       AddObjectsToMachineMemory();
       Machine.Run();
       Drone.Direction = (Direction)Machine.Memory[0];
+    }
+
+    public void Step() {
       Drone.Move();
       UpdateObjectPositions();
       ++TimeStep;

@@ -39,8 +39,10 @@
       this.cyclesValueLabel = new System.Windows.Forms.Label();
       this.stepTextLabel = new System.Windows.Forms.Label();
       this.stepsValueLabel = new System.Windows.Forms.Label();
+      this.groupBox1 = new System.Windows.Forms.GroupBox();
       ((System.ComponentModel.ISupportInitialize)(this.watchDataView)).BeginInit();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
+      this.groupBox1.SuspendLayout();
       this.SuspendLayout();
       // 
       // button_Run
@@ -115,18 +117,21 @@
       // 
       // watchDataView
       // 
+      this.watchDataView.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
       this.watchDataView.BackgroundColor = System.Drawing.Color.White;
       this.watchDataView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-      this.watchDataView.Location = new System.Drawing.Point(989, 12);
+      this.watchDataView.Location = new System.Drawing.Point(989, 31);
       this.watchDataView.Name = "watchDataView";
       this.watchDataView.Size = new System.Drawing.Size(299, 296);
       this.watchDataView.TabIndex = 4;
       // 
       // scoreTextLabel
       // 
+      this.scoreTextLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.scoreTextLabel.AutoSize = true;
       this.scoreTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.scoreTextLabel.Location = new System.Drawing.Point(982, 622);
+      this.scoreTextLabel.Location = new System.Drawing.Point(6, 94);
       this.scoreTextLabel.Name = "scoreTextLabel";
       this.scoreTextLabel.Size = new System.Drawing.Size(106, 39);
       this.scoreTextLabel.TabIndex = 5;
@@ -134,9 +139,11 @@
       // 
       // scoreValueLabel
       // 
+      this.scoreValueLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.scoreValueLabel.AutoSize = true;
       this.scoreValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.scoreValueLabel.Location = new System.Drawing.Point(1094, 622);
+      this.scoreValueLabel.Location = new System.Drawing.Point(118, 94);
       this.scoreValueLabel.Name = "scoreValueLabel";
       this.scoreValueLabel.Size = new System.Drawing.Size(35, 39);
       this.scoreValueLabel.TabIndex = 6;
@@ -155,9 +162,11 @@
       // 
       // cyclesTextLabel
       // 
+      this.cyclesTextLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.cyclesTextLabel.AutoSize = true;
       this.cyclesTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.cyclesTextLabel.Location = new System.Drawing.Point(982, 583);
+      this.cyclesTextLabel.Location = new System.Drawing.Point(6, 55);
       this.cyclesTextLabel.Name = "cyclesTextLabel";
       this.cyclesTextLabel.Size = new System.Drawing.Size(120, 39);
       this.cyclesTextLabel.TabIndex = 7;
@@ -165,9 +174,11 @@
       // 
       // cyclesValueLabel
       // 
+      this.cyclesValueLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.cyclesValueLabel.AutoSize = true;
       this.cyclesValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.cyclesValueLabel.Location = new System.Drawing.Point(1094, 583);
+      this.cyclesValueLabel.Location = new System.Drawing.Point(118, 55);
       this.cyclesValueLabel.Name = "cyclesValueLabel";
       this.cyclesValueLabel.Size = new System.Drawing.Size(35, 39);
       this.cyclesValueLabel.TabIndex = 8;
@@ -175,9 +186,11 @@
       // 
       // stepTextLabel
       // 
+      this.stepTextLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.stepTextLabel.AutoSize = true;
       this.stepTextLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.stepTextLabel.Location = new System.Drawing.Point(982, 544);
+      this.stepTextLabel.Location = new System.Drawing.Point(6, 16);
       this.stepTextLabel.Name = "stepTextLabel";
       this.stepTextLabel.Size = new System.Drawing.Size(98, 39);
       this.stepTextLabel.TabIndex = 9;
@@ -185,25 +198,38 @@
       // 
       // stepsValueLabel
       // 
+      this.stepsValueLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.stepsValueLabel.AutoSize = true;
       this.stepsValueLabel.Font = new System.Drawing.Font("Century Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.stepsValueLabel.Location = new System.Drawing.Point(1094, 544);
+      this.stepsValueLabel.Location = new System.Drawing.Point(118, 16);
       this.stepsValueLabel.Name = "stepsValueLabel";
       this.stepsValueLabel.Size = new System.Drawing.Size(35, 39);
       this.stepsValueLabel.TabIndex = 10;
       this.stepsValueLabel.Text = "0";
+      // 
+      // groupBox1
+      // 
+      this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+      this.groupBox1.Controls.Add(this.stepTextLabel);
+      this.groupBox1.Controls.Add(this.stepsValueLabel);
+      this.groupBox1.Controls.Add(this.scoreTextLabel);
+      this.groupBox1.Controls.Add(this.scoreValueLabel);
+      this.groupBox1.Controls.Add(this.cyclesValueLabel);
+      this.groupBox1.Controls.Add(this.cyclesTextLabel);
+      this.groupBox1.Location = new System.Drawing.Point(989, 515);
+      this.groupBox1.Name = "groupBox1";
+      this.groupBox1.Size = new System.Drawing.Size(299, 178);
+      this.groupBox1.TabIndex = 11;
+      this.groupBox1.TabStop = false;
+      this.groupBox1.Text = "Score";
       // 
       // MapView
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.ClientSize = new System.Drawing.Size(1300, 705);
-      this.Controls.Add(this.stepsValueLabel);
-      this.Controls.Add(this.stepTextLabel);
-      this.Controls.Add(this.cyclesValueLabel);
-      this.Controls.Add(this.cyclesTextLabel);
-      this.Controls.Add(this.scoreValueLabel);
-      this.Controls.Add(this.scoreTextLabel);
+      this.Controls.Add(this.groupBox1);
       this.Controls.Add(this.watchDataView);
       this.Controls.Add(this.label1);
       this.Controls.Add(this.mapComboBox);
@@ -216,6 +242,8 @@
       this.Text = "Map";
       ((System.ComponentModel.ISupportInitialize)(this.watchDataView)).EndInit();
       ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
+      this.groupBox1.ResumeLayout(false);
+      this.groupBox1.PerformLayout();
       this.ResumeLayout(false);
       this.PerformLayout();
 
@@ -238,5 +266,6 @@
     private System.Windows.Forms.Label cyclesValueLabel;
     private System.Windows.Forms.Label stepTextLabel;
     private System.Windows.Forms.Label stepsValueLabel;
+    private System.Windows.Forms.GroupBox groupBox1;
   }
 }

@@ -168,10 +168,10 @@ namespace DroneFlightPath {
           Assign(ymin, Max(_(0), y - 3)),
           Assign(ymax, Min(MapCols, y + 4)),
           While(xmin < xmax,
-            Assign(j, ymin),
-            While(j < ymax,
-              ArraySet(currentMap, xmin * MapCols + j, citizenMapValue),
-              Inc(j)
+            Assign(min, ymin),
+            While(min < ymax,
+              ArraySet(currentMap, xmin, min, citizenMapValue),
+              Inc(min)
             ),
             Inc(xmin)
           ),
@@ -276,13 +276,9 @@ namespace DroneFlightPath {
           Assign(ymax, Min(MapRows, cy + 4)),
           // check if citizen moved right
           If(cx - 3 > 0, _(
-            Assign(v, ArrayGet(currentMap, cx - 4, cy)),
+            Assign(v, ArrayGet(mapDiff, cx - 4, cy)),
             If(v == -citizenMapValue, _(
               Assign(y, ymin),
-              While(y < ymax,
-                ArraySet(currentMap, cx - 4, y, 0),
-                Inc(y)
-              ),
               Assign(min, cx + 4),
               Assign(max, Min(min + 4, MapCols)),
               Assign(x, min),
@@ -300,13 +296,9 @@ namespace DroneFlightPath {
           )),
           // check if citizen moved left
           If(cx + 4 < MapCols, _(
-            Assign(v, ArrayGet(currentMap, cx + 4, cy)),
+            Assign(v, ArrayGet(mapDiff, cx + 4, cy)),
             If(v == -citizenMapValue, _(
               Assign(y, ymin),
-              While(y < ymax,
-                ArraySet(currentMap, cx + 4, y, 0),
-                Inc(y)
-              ),
               Assign(min, Max(_(0), cx - 7)),
               Assign(max, cx - 3),
               Assign(x, min),
@@ -324,13 +316,9 @@ namespace DroneFlightPath {
           )),
           // check if citizen moved down
           If(cy - 3 > 0, _(
-            Assign(v, ArrayGet(currentMap, cx, cy - 4)),
+            Assign(v, ArrayGet(mapDiff, cx, cy - 4)),
             If(v == -citizenMapValue, _(
               Assign(x, xmin),
-              While(x < xmax,
-                ArraySet(currentMap, x, cy - 4, 0),
-                Inc(x)
-              ),
               Assign(min, cy + 4),
               Assign(max, Min(min + 4, MapRows)),
               Assign(y, min),
@@ -348,13 +336,9 @@ namespace DroneFlightPath {
           )),
           // check if citizen moved up
           If(cy + 4 < MapRows, _(
-            Assign(v, ArrayGet(currentMap, cx, cy + 4)),
+            Assign(v, ArrayGet(mapDiff, cx, cy + 4)),
             If(v == -citizenMapValue, _(
               Assign(x, xmin),
-              While(x < xmax,
-                ArraySet(currentMap, x, cy + 4, 0),
-                Inc(x)
-              ),
               Assign(min, Max(_(0), cy - 7)),
               Assign(max, cy - 3),
               Assign(y, min),

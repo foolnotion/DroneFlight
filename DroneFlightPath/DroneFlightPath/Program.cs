@@ -16,8 +16,8 @@ namespace DroneFlightPath {
 
     static void Main(string[] args) {
       Test.TestCit();
-      var block = Strategy.NaiveGradientDescent();
-      //      var block = Strategy.Test();
+      //      var block = Strategy.NaiveGradientDescent();
+      var block = Strategy.Manhattan();
       var mmapVisitor = new MapObjectsToMemoryVisitor();
       block.Accept(mmapVisitor);
       var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
@@ -41,19 +41,19 @@ namespace DroneFlightPath {
       File.WriteAllText("12_noWayToTarget.txt", sb.ToString());
 
       var rm = new RegisterMachine();
-      rm.Memory[1] = 10; // rows
-      rm.Memory[2] = 10; // columns
-      rm.Memory[3] = 1; // dx = 0
-      rm.Memory[4] = 0; // dy = 0
-      rm.Memory[5] = 5; // tx
-      rm.Memory[6] = 7; // ty
-      rm.Memory[7] = 3;
-      rm.Memory[8] = 0;
-      rm.Memory[9] = 2;
-      rm.Memory[10] = 1;
-      rm.Memory[11] = 2;
-      rm.Memory[12] = 2;
-      rm.Memory[13] = 2;
+      //      rm.Memory[1] = 10; // rows
+      //      rm.Memory[2] = 10; // columns
+      //      rm.Memory[3] = 1; // dx = 0
+      //      rm.Memory[4] = 0; // dy = 0
+      //      rm.Memory[5] = 5; // tx
+      //      rm.Memory[6] = 7; // ty
+      //      rm.Memory[7] = 3;
+      //      rm.Memory[8] = 0;
+      //      rm.Memory[9] = 2;
+      //      rm.Memory[10] = 1;
+      //      rm.Memory[11] = 2;
+      //      rm.Memory[12] = 2;
+      //      rm.Memory[13] = 2;
       rm.LoadIntructions(genVisitor.Code);
       rm.Run();
       for (int row = 0; row < 10; row++) {

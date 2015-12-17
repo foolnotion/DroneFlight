@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using CodeInterpreter;
+using CodeInterpreter.AST;
 using DroneFlightPath;
 using DroneFlightPathUI.Models;
 
@@ -24,7 +25,7 @@ namespace DroneFlightPathUI {
       {ObjectType.Citizen, Color.IndianRed}
     };
 
-    private const int SquareSize = 15;
+    private const int SquareSize = 30;
 
     private Map map;
     private BindingSource watchDataSource;
@@ -48,6 +49,13 @@ namespace DroneFlightPathUI {
           @"..\..\..\DroneFlightPath\Maps\01_letsGetToKnowEachOther.txt"));
       var m = MapUtil.LoadPath(path);
       m.Machine = new RegisterMachine(1000000);
+      var block = Strategy.Manhattan();
+      var mmapVisitor = new MapObjectsToMemoryVisitor();
+      block.Accept(mmapVisitor);
+      var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
+      block.Accept(genVisitor);
+      m.Machine.MemoryMap = genVisitor.MemoryMap;
+      m.Machine.LoadIntructions(genVisitor.Code);
       Map = m;
       InitWatchDataView();
       mapWeight = 0.01;
@@ -175,7 +183,7 @@ namespace DroneFlightPathUI {
     private void UpdateRunInfo() {
       var steps = map.TimeStep;
       var cycles = machine.Cycles;
-      scoreValueLabel.Text = (mapWeight * 1e6 / Math.Log(steps * steps * cycles)).ToString(".##");
+      scoreValueLabel.Text = (mapWeight * 1e5 / Math.Log(steps * steps * cycles)).ToString(".##");
       cyclesValueLabel.Text = cycles.ToString();
       stepsValueLabel.Text = steps.ToString();
     }
@@ -196,6 +204,8 @@ namespace DroneFlightPathUI {
 
     public void DrawMap() {
       var bitmap = new Bitmap(map.Rows * SquareSize + 1, map.Cols * SquareSize + 1);
+
+      var font = new Font(FontFamily.GenericMonospace, 8);
       using (var g = Graphics.FromImage(bitmap)) {
         g.SmoothingMode = SmoothingMode.HighQuality;
         for (int i = 0; i < map.Rows; ++i) {
@@ -203,8 +213,14 @@ namespace DroneFlightPathUI {
             int x = i * SquareSize;
             int y = j * SquareSize;
             var rectangle = new Rectangle(x, y, SquareSize, SquareSize);
-
             DrawRectangle(g, rectangle, Pens.Gray, new SolidBrush(Color.White));
+            try {
+              var currentMap = machine.MemoryMap["mapDiff"];
+              g.DrawString(machine.Memory[currentMap + i * map.Cols + j].ToString(), font, Brushes.Black, rectangle);
+            }
+            catch (Exception e) {
+
+            }
             if (i % 5 == 0 && j % 5 == 0) {
               rectangle = new Rectangle(x - 1, y - 1, 2, 2);
               DrawRectangle(g, rectangle, Pens.Black, Brushes.Black);
@@ -236,7 +252,7 @@ namespace DroneFlightPathUI {
           DrawRectangle(g, rectangle, Pens.Black, new SolidBrush(ObjectColors[o.Type]));
           text = ObjectLabels[o.Type];
           size = g.MeasureString(text, font);
-          g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2, rectangle.Y + (rectangle.Height - size.Height) / 2);
+          //g.DrawString(text, font, brush, rectangle.X + (rectangle.Width - size.Width) / 2, rectangle.Y + (rectangle.Height - size.Height) / 2);
 
           if (o.Type == ObjectType.Citizen || o.Type == ObjectType.Drone) {
             var m = (MovingObject)o;
@@ -353,8 +369,9 @@ namespace DroneFlightPathUI {
 
     private void button_Step_Click(object sender, EventArgs e) {
       try {
-        map.Step();
+        map.RunPathFinding();
         Draw();
+        Map.Step();
         UpdateWatchVariables();
         UpdateRunInfo();
       }
@@ -396,6 +413,13 @@ namespace DroneFlightPathUI {
       Map = MapUtil.Load(res);
       Map.Machine = new RegisterMachine(1000000);
       machine = Map.Machine;
+      var block = Strategy.Manhattan();
+      var mmapVisitor = new MapObjectsToMemoryVisitor();
+      block.Accept(mmapVisitor);
+      var genVisitor = new GenerateAsmVisitor(mmapVisitor.MemoryMap);
+      block.Accept(genVisitor);
+      machine.MemoryMap = genVisitor.MemoryMap;
+      machine.LoadIntructions(genVisitor.Code);
     }
   }
 }
